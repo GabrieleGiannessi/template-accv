@@ -1,0 +1,37 @@
+{
+  "tournament": "CAMPIONATO CALCETTO A5",
+  "matchday": "GIORNATA 5",
+  "date": "Giovedì 23 Luglio 2026",
+  "time": "21:30",
+  "location": "Centro Sportivo ACCV - Campo A",
+  "home_team": {
+    "name": "A.C.C.V.",
+    "short_name": "ACCV",
+    "primary_color": [0, 229, 255]
+  },
+  "away_team": {
+    "name": "REAL MATRID",
+    "short_name": "MAT",
+    "primary_color": [255, 71, 87]
+  },
+  "home_score": 7,
+  "away_score": 4,
+  "home_scorers": [
+    { "name": "Rossi M.", "goals": 3 },
+    { "name": "Bianchi L.", "goals": 2 },
+    { "name": "Verdi G.", "goals": 1 },
+    { "name": "Esposito A.", "goals": 1 }
+  ],
+  "away_scorers": [
+    { "name": "Ferrari F.", "goals": 2 },
+    { "name": "Romano K.", "goals": 2 }
+  ],
+  "mvp": {
+    "player_name": "Mario Rossi",
+    "jersey_number": "10",
+    "position": "Pivot / Attaccante",
+    "goals": 3,
+    "assists": 2,
+    "rating": "9.5"
+  }
+}
