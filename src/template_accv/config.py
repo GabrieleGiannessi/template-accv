@@ -15,7 +15,7 @@ BACKGROUNDS_DIR = ASSETS_DIR / "backgrounds"
 DATA_DIR = BASE_DIR / "data"
 OUTPUT_DIR = BASE_DIR / "output"
 
-# Ensure output directory exists
+# Ensure directories exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 FONTS_DIR.mkdir(parents=True, exist_ok=True)
 LOGOS_DIR.mkdir(parents=True, exist_ok=True)
@@ -23,12 +23,27 @@ BACKGROUNDS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class AspectRatio(str, Enum):
-    POST = "post"      # 1080 x 1080 (1:1)
-    STORY = "story"    # 1080 x 1920 (9:16)
+    RATIO_9_16 = "9:16"       # 1080 x 1920 (Story / Reels / TikTok)
+    RATIO_4_3 = "4:3"         # 1440 x 1080 (Classic Landscape Post)
+    RATIO_16_9 = "16:9"       # 1920 x 1080 (Banner / Widescreen)
+    RATIO_1_1 = "1:1"         # 1080 x 1080 (Square)
+    RATIO_4_5 = "4:5"         # 1080 x 1350 (Portrait Post)
+    POST = "post"             # Legacy alias 1:1
+    STORY = "story"           # Legacy alias 9:16
+
+
+class GraphicStyle(str, Enum):
+    CLASSIC = "classic"       # Glassmorphism cards layout with neon accents
+    PHOTO = "photo"           # Minimal photo-overlay layout matching reference graphic
 
 
 # Dimensions
 DIMENSIONS = {
+    AspectRatio.RATIO_9_16: (1080, 1920),
+    AspectRatio.RATIO_4_3: (1440, 1080),
+    AspectRatio.RATIO_16_9: (1920, 1080),
+    AspectRatio.RATIO_1_1: (1080, 1080),
+    AspectRatio.RATIO_4_5: (1080, 1350),
     AspectRatio.POST: (1080, 1080),
     AspectRatio.STORY: (1080, 1920),
 }

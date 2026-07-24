@@ -93,19 +93,117 @@ def draw_text_centered(
     draw.text((x, y), text, font=font, fill=fill)
 
 
+def get_fitted_font(
+    text: str,
+    font_name_key: str,
+    max_width: int,
+    initial_size: int,
+    min_size: int = 14
+) -> ImageFont.FreeTypeFont:
+    """
+    Dynamically calculate and return font scaled down so text fits within max_width.
+    """
+    from template_accv.utils.fonts import get_font
+    current_size = initial_size
+    font = get_font(font_name_key, current_size)
+    while current_size > min_size:
+        tw, _ = get_text_dimensions(text, font)
+        if tw <= max_width:
+            return font
+        current_size -= 2
+        font = get_font(font_name_key, current_size)
+    return font
+
+
+def format_team_name_vertical(
+    name: str,
+    font_name_key: str,
+    max_width: int,
+    initial_size: int,
+    min_size: int = 18
+) -> Tuple[list, ImageFont.FreeTypeFont]:
+    """
+    Format team name for drawing above team logo.
+    If single line exceeds max_width and name has multiple words,
+    split into 2 balanced vertical lines.
+    """
+    from template_accv.utils.fonts import get_font
+    words = name.strip().upper().split()
+    font = get_font(font_name_key, initial_size)
+    tw, _ = get_text_dimensions(name.upper(), font)
+
+    if (tw > max_width or len(name) > 14) and len(words) > 1:
+        mid = len(words) // 2
+        line1 = " ".join(words[:mid])
+        line2 = " ".join(words[mid:])
+        
+        cur_sz = initial_size
+        font = get_font(font_name_key, cur_sz)
+        while cur_sz > min_size:
+            w1, _ = get_text_dimensions(line1, font)
+            w2, _ = get_text_dimensions(line2, font)
+            if max(w1, w2) <= max_width:
+                break
+            cur_sz -= 2
+            font = get_font(font_name_key, cur_sz)
+            
+        return [line1, line2], font
+
+    font = get_fitted_font(name.upper(), font_name_key, max_width, initial_size, min_size)
+    return [name.upper()], font
+
+
+def find_logo_in_logos_dir(team_identifier: str) -> Optional[Path]:
+    """Search LOGOS_DIR for matching logo filename."""
+    from template_accv.config import LOGOS_DIR
+    if not team_identifier or not LOGOS_DIR.exists():
+        return None
+
+    clean_id = team_identifier.strip().lower().replace(" ", "_").replace(".", "")
+    for p in LOGOS_DIR.iterdir():
+        if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
+            stem = p.stem.lower().replace(" ", "_").replace(".", "")
+            if clean_id in stem or stem in clean_id:
+                return p
+    return None
+
+
 def load_team_logo(
-    logo_path: Optional[str],
+    logo_path: Optional[str] = None,
+    team_name: Optional[str] = None,
     size: Tuple[int, int] = (140, 140),
     fallback_text: str = "FC",
-    primary_color: Tuple[int, int, int] = (0, 229, 255)
+    primary_color: Tuple[int, int, int] = (0, 229, 255),
+    padding: int = 10
 ) -> Image.Image:
     """
-    Load a team logo image or generate a modern circular crest badge with fallback text if missing.
+    Load a team logo image from path or logos directory, or generate a modern circular badge as fallback.
+    Trims transparent padding and applies safe inner margins so no edges are clipped.
     """
+    resolved_path: Optional[Path] = None
+
     if logo_path and Path(logo_path).exists():
+        resolved_path = Path(logo_path)
+    else:
+        # Try finding in assets/logos
+        if team_name:
+            resolved_path = find_logo_in_logos_dir(team_name)
+        if not resolved_path and fallback_text:
+            resolved_path = find_logo_in_logos_dir(fallback_text)
+
+    if resolved_path and resolved_path.exists():
         try:
-            img = Image.open(logo_path).convert("RGBA")
-            img.thumbnail(size, Image.Resampling.LANCZOS)
+            img = Image.open(resolved_path).convert("RGBA")
+            
+            # Trim transparent margins to obtain true content bounding box
+            bbox = img.getbbox()
+            if bbox:
+                img = img.crop(bbox)
+
+            # Fit proportionally inside inner safe area (size minus padding)
+            inner_w = max(10, size[0] - padding * 2)
+            inner_h = max(10, size[1] - padding * 2)
+            img.thumbnail((inner_w, inner_h), Image.Resampling.LANCZOS)
             
             # Center thumbnail on target size canvas
             canvas = Image.new("RGBA", size, (0, 0, 0, 0))
@@ -113,7 +211,7 @@ def load_team_logo(
             canvas.paste(img, offset, img)
             return canvas
         except Exception as e:
-            print(f"Error loading logo {logo_path}: {e}")
+            print(f"Error loading logo {resolved_path}: {e}")
 
     # Generate modern circular badge as fallback
     canvas = Image.new("RGBA", size, (0, 0, 0, 0))

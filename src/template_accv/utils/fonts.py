@@ -12,23 +12,27 @@ from template_accv.config import FONTS, FONTS_DIR
 
 FONT_URLS = {
     "BebasNeue-Regular.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/BebasNeue-Regular.ttf",
-    "Montserrat-Bold.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/static/Montserrat-Bold.ttf",
-    "Montserrat-Regular.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/static/Montserrat-Regular.ttf",
-    "Montserrat-Light.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/static/Montserrat-Light.ttf",
+    "Montserrat-Bold.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/Montserrat-Bold.ttf",
+    "Montserrat-Regular.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/Montserrat-Regular.ttf",
+    "Montserrat-Light.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/Montserrat-Light.ttf",
 }
 
+_fonts_checked = False
 
 def ensure_fonts_downloaded():
     """Ensure all required fonts exist locally in assets/fonts."""
+    global _fonts_checked
+    if _fonts_checked:
+        return
+    _fonts_checked = True
+
     for font_file, url in FONT_URLS.items():
         font_path = FONTS_DIR / font_file
         if not font_path.exists():
-            print(f"Downloading missing font: {font_file}...")
             try:
                 urllib.request.urlretrieve(url, font_path)
-                print(f"Font saved to {font_path}")
-            except Exception as e:
-                print(f"Failed to download font {font_file}: {e}")
+            except Exception:
+                pass
 
 
 def get_font(font_name_key: str, size: int) -> ImageFont.FreeTypeFont:
