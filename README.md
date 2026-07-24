@@ -44,7 +44,7 @@ Il generatore supporta 5 diversi formati di output adattivi:
 2. **Selezione per Emozione**: Con l'argomento `--emotion` / `-e` (es. `felicità`, `tristezza`, `polemica`, `normale`, `foto squadra`), lo script seleziona casualmente una foto presente nella relativa sottocartella in `assets/backgrounds/` (es. `assets/backgrounds/tema felicità/`).
 3. **Default Behaviour**: Se non viene specificata alcuna categoria (o se la cartella non esiste), lo script seleziona l'immagine di sfondo presente nella cartella `/backgrounds` (`assets/backgrounds/std.JPG`).
 
-### Filtri sul Contrassto:
+## Filtri sul Contrasto:
 - `--contrast <valore>`: Imposta il fattore di contrasto per lo sfondo (es. `0.5` per sfondi più morbidi, `1.0` normale).
 - `--no-contrast`: Riduce automaticamente il contrasto dell'immagine di sfondo per un effetto flat.
 
@@ -52,6 +52,7 @@ Il generatore supporta 5 diversi formati di output adattivi:
 
 ## 🚀 Guida all'Uso ed Esempi di Esecuzione da CLI
 
+Si raccomanda prima di tutto di installare il gestore di pacchetti **uv**, di seguito si riporta il [link](https://docs.astral.sh/uv/getting-started/installation/). 
 Di seguito sono riportati i principali esempi pratici per eseguire lo script `main.py`:
 
 ### 1. Esecuzione Base (Tutte le Grafiche nei Formati Default)
