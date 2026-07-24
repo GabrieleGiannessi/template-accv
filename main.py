@@ -23,7 +23,7 @@ from template_accv.generators.mvp import MVPGenerator
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Generatore automatizzato di grafiche social per A.C. C.V."
+        description="Generatore automatizzato di grafiche social per eventi sportivi"
     )
     parser.add_argument(
         "--type", "-t",
@@ -80,7 +80,7 @@ def load_match_data(json_path_str: str):
             away_score=data.get("away_score", 0),
             home_scorers=home_scorers,
             away_scorers=away_scorers,
-            tournament=data.get("tournament", "CAMPIONATO CALCETTO A5"),
+            tournament=data.get("tournament", "CAMPIONATO CALCETTO A 7"),
             matchday=data.get("matchday", "MATCHDAY"),
             date=data.get("date", ""),
             time=data.get("time", ""),
@@ -113,8 +113,8 @@ def load_match_data(json_path_str: str):
         return match_res, next_match_data, mvp_data
     else:
         # Fallback default objects
-        home_team = Team(name="A.C.C.V", short_name="ACCV", primary_color=(0, 229, 255))
-        away_team = Team(name="REAL MATRID", short_name="MAT", primary_color=(255, 71, 87))
+        home_team = Team(name="ACCV", short_name="ACCV", primary_color=(0, 229, 255))
+        away_team = Team(name="TOTUTTI FRUTTI", short_name="TOT", primary_color=(255, 71, 87))
         match_res = MatchResult(
             home_team=home_team,
             away_team=away_team,
@@ -135,7 +135,7 @@ def generate():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print("=" * 60)
-    print("  ⚽ ACCV SOCIAL GRAPHICS AUTOMATION GENERATOR ⚽")
+    print("  ⚽ ACCV SOCIsAL GRAPHICS AUTOMATION GENERATOR ⚽")
     print("=" * 60)
 
     match_res, next_match_data, mvp_data = load_match_data(args.data)
