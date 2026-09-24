@@ -12,14 +12,22 @@ ASSETS_DIR = BASE_DIR / "assets"
 FONTS_DIR = ASSETS_DIR / "fonts"
 LOGOS_DIR = ASSETS_DIR / "logos"
 BACKGROUNDS_DIR = ASSETS_DIR / "backgrounds"
+TEMPLATES_DIR = ASSETS_DIR / "templates"
+FIGURINA_TEMPLATE_PATH = TEMPLATES_DIR / "figurina.png"
+PLAYERS_DIR = ASSETS_DIR / "players"
+PLAYERS_HEADSHOT_DIR = PLAYERS_DIR / "headshot"
+PLAYERS_TRANSPARENT_DIR = PLAYERS_HEADSHOT_DIR / "transparent"
 DATA_DIR = BASE_DIR / "data"
 OUTPUT_DIR = BASE_DIR / "output"
+FIGURINE_OUTPUT_DIR = OUTPUT_DIR / "figurine"
 
 # Ensure directories exist
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+FIGURINE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 FONTS_DIR.mkdir(parents=True, exist_ok=True)
 LOGOS_DIR.mkdir(parents=True, exist_ok=True)
 BACKGROUNDS_DIR.mkdir(parents=True, exist_ok=True)
+TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class AspectRatio(str, Enum):
@@ -35,6 +43,13 @@ class AspectRatio(str, Enum):
 class GraphicStyle(str, Enum):
     CLASSIC = "classic"       # Glassmorphism cards layout with neon accents
     PHOTO = "photo"           # Minimal photo-overlay layout matching reference graphic
+
+
+class FigurinaFormat(str, Enum):
+    CARD = "card"             # Figurina classica 1024x1536
+    STORY = "story"           # Formato Instagram Story 9:16 (1080x1920) con card e sfondo
+    POST = "post"             # Formato Instagram Post 4:5 (1080x1350)
+    ALL = "all"               # Genera tutti i formati
 
 
 # Dimensions

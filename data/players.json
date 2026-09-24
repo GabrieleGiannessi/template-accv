@@ -1,0 +1,104 @@
+{
+  "bouba": {
+    "name": "Boubacar Gadio",
+    "role": "Centrocampista",
+    "number": "8",
+    "team": "A.C.C.V."
+  },
+  "dario": {
+    "name": "Dario Stagi",
+    "role": "Centrocampista",
+    "number": "7",
+    "team": "A.C.C.V."
+  },
+  "diego": {
+    "name": "Diego Leon",
+    "role": "Attaccante",
+    "number": "11",
+    "team": "A.C.C.V."
+  },
+  "elia": {
+    "name": "Elia Zanchetta",
+    "role": "Portiere",
+    "number": "1",
+    "team": "A.C.C.V."
+  },
+  "f-citti": {
+    "name": "Federico Citti",
+    "role": "Centrocampista",
+    "number": "6",
+    "team": "A.C.C.V."
+  },
+  "fuccio": {
+    "name": "Lorenzo Fuccio",
+    "role": "Centrocampista",
+    "number": "14",
+    "team": "A.C.C.V."
+  },
+  "g-giannessi": {
+    "name": "Gabriele Giannessi",
+    "role": "Difensore",
+    "number": "4",
+    "team": "A.C.C.V."
+  },
+  "gigi": {
+    "name": "Gigi",
+    "role": "Centrocampista",
+    "number": "12",
+    "team": "A.C.C.V."
+  },
+  "l-giannessi": {
+    "name": "Lorenzo Giannessi",
+    "role": "Difensore",
+    "number": "3",
+    "team": "A.C.C.V."
+  },
+  "laidel": {
+    "name": "Laidel Adonis",
+    "role": "Attaccante",
+    "number": "9",
+    "team": "A.C.C.V."
+  },
+  "martinelli": {
+    "name": "Federico Martinelli",
+    "role": "Difensore",
+    "number": "2",
+    "team": "A.C.C.V."
+  },
+  "ricci": {
+    "name": "Leonardo Ricci",
+    "role": "Difensore",
+    "number": "5",
+    "team": "A.C.C.V."
+  },
+  "rossi": {
+    "name": "Matteo Rossi",
+    "role": "Difensore",
+    "number": "10",
+    "team": "A.C.C.V."
+  },
+  "s-citti": {
+    "name": "Samuele Citti",
+    "role": "Attaccante",
+    "number": "17",
+    "team": "A.C.C.V."
+  },
+  "samu-rama": {
+    "name": "Samuele Ramacciotti",
+    "role": "Centrocampista",
+    "number": "19",
+    "team": "A.C.C.V."
+  },
+  "tersitti": {
+    "name": "Lorenzo Tersitti",
+    "role": "Difensore",
+    "number": "13",
+    "team": "A.C.C.V."
+  },
+  "tintori": {
+    "name": "Filippo Tintori",
+    "role": "Attaccante",
+    "number": "20",
+    "team": "A.C.C.V."
+  }
+}

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 from PIL import Image, ImageEnhance, ImageOps
 
-from template_accv.config import BACKGROUNDS_DIR, Colors
+from template_accv.config import BASE_DIR, BACKGROUNDS_DIR, Colors
 
 
 def find_emotion_directory(emotion_name: str) -> Optional[Path]:
@@ -82,6 +82,10 @@ def load_and_process_background(
         p = Path(bg_path)
         if p.exists() and p.is_file():
             selected_path = p
+        elif (BACKGROUNDS_DIR / bg_path).exists() and (BACKGROUNDS_DIR / bg_path).is_file():
+            selected_path = BACKGROUNDS_DIR / bg_path
+        elif (BASE_DIR / bg_path).exists() and (BASE_DIR / bg_path).is_file():
+            selected_path = BASE_DIR / bg_path
 
     # 2. Emotion category specified
     if not selected_path and emotion:

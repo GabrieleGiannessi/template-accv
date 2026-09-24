@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: accv-studio
+    env: python
+    buildCommand: pip install .
+    startCommand: python main.py serve --host 0.0.0.0 --port $PORT
+    plan: free

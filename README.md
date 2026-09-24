@@ -21,6 +21,13 @@ Automazione per la creazione automatizzata di template grafici social per i risu
    - Scheda giocatore in stile carte FUT / eSports con accenti dorati.
    - Numero di maglia (#10, #7, ecc.), ruolo e statistiche (gol, assist, parate, voto pagella).
 
+4. **Figurine Calciatori Panini (`FigurinaCard`)**:
+   - Riproduzione autentica delle figurine Panini Serie B Perini con template ufficiale.
+   - Posizionamento, riscalatura e ritaglio automatico dei calciatori da `assets/players/headshot/transparent/`.
+   - Targhetta Panini con nome, ruolo, numero di maglia e stemma societario ACCV.
+   - Formati dedicati sia per stampa/collezione (Card 1024x1536) sia per i social (Storie Instagram 9:16 con effetto 3D e Post 4:5).
+   - Tool dedicato semplicissimo da usare anche per non tecnici: `python3 generate_figurine.py`.
+
 ---
 
 ## 📐 Formati Social Media Supportati
@@ -50,15 +57,61 @@ Il generatore supporta 5 diversi formati di output adattivi:
 
 ---
 
+---
+
+## 🌐 Studio Web Locale (Consigliato per Social Media Manager) 🚀
+
+Per generare, visualizzare e scaricare le grafiche in tempo reale senza usare comandi complessi né modificare file JSON, avvia lo **Studio Grafico Web**:
+
+```bash
+python3 main.py serve
+```
+- **URL Desktop**: Apri nel browser `http://localhost:8000`
+- **Accesso da Smartphone (Spogliatoio / Terzo Tempo)**: Apri `http://<tuo-ip-locale>:8000` (es. `http://192.168.1.15:8000`)
+
+### ⚡ Funzionalità dello Studio Web:
+- **Live Preview Sub-Second**: Rendering in memoria ad ogni modifica senza scrivere su disco.
+- **Selettori Intelligenti**: Autocomplete delle squadre avversarie da `assets/logos/` e dei calciatori da `data/players.json`.
+- **Tasti Rapidi Marcatori**: Clicca sui chip dei giocatori per aggiungere gol con stepper `+` / `-`.
+- **Instagram Safe Zone Guide**: Overlay interattivo per verificare che testi e loghi non siano coperti dall'interfaccia delle storie.
+- **Export Multiplo & Condivisione**: Download immediato PNG, pacchetto ZIP con tutti i formati, copia negli appunti e condivisione social diretta su smartphone via Web Share API.
+- **Studio Figurine Panini**: Visualizzazione della rosa, anteprima delle figurine e download batch.
+- **Gestore Rosa & Campionato**: Operazioni CRUD per aggiungere/modificare/eliminare giocatori e squadre del campionato.
+
+### 🌍 Come Condividere la Demo Pubblicamente Online:
+
+#### Opzione A: Tunnel Istantaneo (Consigliato per test rapido, 10 secondi)
+Con il server attivo su `localhost:8000`, puoi generare all'istante un link pubblico HTTPS senza bisogno di server dedicati:
+```bash
+# Con Cloudflare Tunnel (gratuito, nessun account necessario):
+cloudflared tunnel --url http://localhost:8000
+
+# Oppure con npx (Node.js):
+npx localtunnel --port 8000
+```
+Condividi il link generato (es. `https://xyz.trycloudflare.com`) su WhatsApp per far testare la web app a tutti i componenti della squadra direttamente da mobile!
+
+#### Opzione B: Deploy Permanente Gratuito (Render / Fly.io / HuggingFace)
+Il repository include già i file di configurazione `render.yaml`, `Dockerfile` e `Procfile`.
+Basta collegare la repo GitHub su **Render.com** (Free Web Service) per avere l'app online 24/7 con URL permanente.
+
+---
+
 ## 🚀 Guida all'Uso ed Esempi di Esecuzione da CLI
 
-Si raccomanda prima di tutto di installare il gestore di pacchetti **uv**, di seguito si riporta il [link](https://docs.astral.sh/uv/getting-started/installation/). 
-Di seguito sono riportati i principali esempi pratici per eseguire lo script `main.py`:
+Puoi utilizzare la CLI unificata sia tramite comandi dedicati (`serve`, `generate`, `figurina`) sia con la sintassi diretta classica:
 
-### 1. Esecuzione Base (Tutte le Grafiche nei Formati Default)
+### 1. Avvio Studio Web
+```bash
+python3 main.py serve --port 8000 --open
+```
+
+### 2. Esecuzione Base (Tutte le Grafiche nei Formati Default)
 Genera le grafiche per Risultato, Prossima Partita ed MVP basandosi sui dati in JSON:
 ```bash
-uv run python main.py
+python3 main.py generate
+# oppure semplicemente:
+python3 main.py
 ```
 
 ---
@@ -73,13 +126,12 @@ uv run python main.py --type result --home-team "A.C. C.V." --away-team "Real Ma
 uv run python main.py --type result --home-team "A.C. C.V." --away-team "FC Barcelona" --home-score 4 --away-score 3
 ```
 
-### 3. Selezione dello Stile Grafico (`--style`)
-- `--style classic` (Default): Layout con schede glassmorphism, badge al neon e box marcatori integrato.
-- `--style photo`: Layout minimale photo-overlay (basato su foto a tutto schermo, desaturazione drammatica, loghi affiancati al punteggio e la scritta "MATCH RESULT" in basso).
+### 3. Layout Ufficiale Photo-Overlay
+Il generatore adotta come standard ufficiale il layout **Minimal Photo-Overlay** (foto d'azione ad alta risoluzione, desaturazione morbida, loghi societari affiancati al punteggio e scritta "MATCH RESULT"):
 
 ```bash
-# Genera il risultato finale in stile Photo-Overlay (come nell'esempio di riferimento)
-uv run python main.py --type result --home-team "TOTUTTI" --away-team "ACCV" --score 3-4 --style photo --format 4:5
+# Esempio risultato finale in formato 4:5
+python3 main.py generate --type result --home-team "TOTUTTI" --away-team "ACCV" --score 3-4 --format 4:5
 ```
 
 ---
@@ -144,12 +196,53 @@ uv run python main.py --type mvp --format 4:5
 
 ---
 
+### 7. Generazione Figurine Calciatori Panini (`FigurinaCard`) 🌟
+
+Puoi creare le figurine dei giocatori in due modi semplicissimi:
+
+#### Metodo A: Script Dedicato Semplificato (Consigliato anche per chi non è esperto!)
+Lo script `generate_figurine.py` è pensato per essere intuitivo e immediato per chiunque gestisca la comunicazione della squadra:
+```bash
+# 1. Genera in 1 clic tutte le figurine della squadra (sia Card classica che Storie Instagram!):
+python3 generate_figurine.py
+
+# 2. Avvia la procedura guidata interattiva (menu a scelta numerata semplice):
+python3 generate_figurine.py -i
+
+# 3. Genera la figurina di un singolo giocatore:
+python3 generate_figurine.py --player bouba
+
+# 4. Genera solo il formato per le Storie Instagram (9:16 con effetto 3D):
+python3 generate_figurine.py --format story
+```
+
+#### Metodo B: Tramite lo script principale `main.py`
+```bash
+# Genera tutte le figurine (formato card classica + storie Instagram)
+python3 main.py --type figurina --format all
+
+# Genera un singolo giocatore in formato storia
+python3 main.py --type figurina --player elia --format story
+
+# Genera la figurina pulita senza la targhetta inferiore con nome/ruolo
+python3 main.py --type figurina --player g-giannessi --no-banner
+```
+
+> [!TIP]
+> **Personalizzazione Giocatori**: Puoi modificare nomi, ruoli e numeri di maglia semplicemente aprendo il file [data/players.json](file:///home/gabriele/Documenti/projects/template-accv/data/players.json). Se aggiungi una nuova foto in `assets/players/headshot/transparent/`, verrà rilevata automaticamente!
+
+---
+
 ### 📋 Elenco Completo Opzioni CLI:
 
 | Opzione | Scorciatoia | Valori consentiti | Descrizione |
 | :--- | :--- | :--- | :--- |
-| `--type` | `-t` | `all`, `result`, `next`, `mvp` | Tipo di grafica da generare (default: `all`) |
-| `--format` | `-f` | `both`, `all`, `9:16`, `4:3`, `16:9`, `1:1`, `4:5` | Formato di output social (default: `both`) |
+| `--type` | `-t` | `all`, `result`, `next`, `mvp`, `figurina` | Tipo di grafica da generare (default: `all`) |
+| `--format` | `-f` | `both`, `all`, `card`, `story`, `post` | Formato di output social |
+| `--player` | `-p` | *Stringa* | Nome o ID giocatore per figurina (es. `bouba`, `elia`) |
+| `--no-banner` | | *Flag* | Omette la targhetta nome/ruolo/logo sulla figurina |
+| `--data` | `-d` | *Path file* | File JSON sorgente dati (default: `data/example_match.json`) |
+| `--output` | `-o` | *Path cartella* | Cartella di output delle grafiche (default: `output/`) |
 | `--home-team` | `-ht` | *Stringa* | Nome squadra di casa (es. `"A.C. C.V."`) |
 | `--away-team` | `-at` | *Stringa* | Nome squadra ospite (es. `"Real Matrid"`) |
 | `--score` | `-s` | *Stringa* | Punteggio risultato (es. `"5-2"` o `"5:2"`) |

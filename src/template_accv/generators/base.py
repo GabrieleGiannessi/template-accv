@@ -109,8 +109,31 @@ class BaseGraphicGenerator:
             fill=Colors.ACCENT_CYAN
         )
 
+    def to_image(self) -> Image.Image:
+        """Render and return the PIL Image object."""
+        return self.render()
+
+    def to_bytes(self, format: str = "PNG", quality: int = 95) -> bytes:
+        """Render graphic and return raw bytes in memory without writing to disk."""
+        import io
+        img = self.render()
+        buf = io.BytesIO()
+        if format.upper() in ("JPEG", "JPG") and img.mode in ("RGBA", "LA", "P"):
+            img = img.convert("RGB")
+        img.save(buf, format=format, quality=quality)
+        return buf.getvalue()
+
+    def to_data_uri(self, format: str = "PNG", quality: int = 95) -> str:
+        """Render graphic and return Base64 data URI (for direct browser preview)."""
+        import base64
+        raw = self.to_bytes(format=format, quality=quality)
+        mime = "image/png" if format.upper() == "PNG" else "image/jpeg"
+        b64 = base64.b64encode(raw).decode("ascii")
+        return f"data:{mime};base64,{b64}"
+
     def save(self, filepath: str) -> str:
         """Render and save generated graphic to disk."""
         rendered = self.render()
         rendered.save(filepath, "PNG", quality=95)
         return filepath
+

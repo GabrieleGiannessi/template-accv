@@ -67,3 +67,15 @@ class MVP:
     photo_path: Optional[str] = None
     match_opponent: str = ""
     match_date: str = ""
+
+
+@dataclass
+class FigurinaCard:
+    player_name: str
+    photo_path: str
+    role: str = ""
+    jersey_number: Optional[str] = None
+    team_name: str = "A.C.C.V."
+    team_logo_path: Optional[str] = None
+    with_banner: bool = True
+

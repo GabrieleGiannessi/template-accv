@@ -26,31 +26,25 @@ class MatchResultGenerator(BaseGraphicGenerator):
         self,
         match_result: MatchResult,
         aspect_ratio: AspectRatio = AspectRatio.RATIO_9_16,
-        style: Union[GraphicStyle, str] = GraphicStyle.CLASSIC,
         bg_path: Optional[str] = None,
         emotion: Optional[str] = None,
         contrast_factor: float = 1.0,
-        remove_contrast: bool = False
+        remove_contrast: bool = False,
+        style: Optional[Union[GraphicStyle, str]] = None,
     ):
-        self.style = GraphicStyle(style) if isinstance(style, str) else style
-        # Photo style uses clean background photo without heavy full-canvas dark overlay
-        overlay_alpha = 0 if self.style == GraphicStyle.PHOTO else 150
-        
         super().__init__(
             aspect_ratio=aspect_ratio,
             bg_path=bg_path,
             emotion=emotion,
             contrast_factor=contrast_factor,
             remove_contrast=remove_contrast,
-            dark_overlay_alpha=overlay_alpha
+            dark_overlay_alpha=0  # Clean photo background with bottom gradient overlay
         )
         self.data = match_result
 
     def render(self) -> Image.Image:
-        """Render graphic based on selected style."""
-        if self.style == GraphicStyle.PHOTO:
-            return self.render_photo_style()
-        return self.render_classic_style()
+        """Render minimal photo-overlay graphic matching reference design."""
+        return self.render_photo_style()
 
     def render_photo_style(self) -> Image.Image:
         """
@@ -175,226 +169,3 @@ class MatchResultGenerator(BaseGraphicGenerator):
 
         return self.image
 
-    def render_classic_style(self) -> Image.Image:
-        """Render classic glassmorphism card layout."""
-        # 1. Header (Tournament & Matchday)
-        self.draw_top_header(self.data.tournament, self.data.matchday)
-        
-        # 2. Title Banner ("RISULTATO FINALE")
-        if self.aspect_ratio == AspectRatio.RATIO_9_16:
-            y_title = 220
-            font_title_sz = 72
-        elif self.aspect_ratio == AspectRatio.RATIO_4_5:
-            y_title = 160
-            font_title_sz = 68
-        elif self.is_wide_landscape:
-            y_title = 110
-            font_title_sz = 58
-        else:
-            y_title = 140
-            font_title_sz = 64
-
-        font_title = get_font("HEADER", font_title_sz)
-        title_str = "RISULTATO FINALE"
-        tw, th = get_text_dimensions(title_str, font_title)
-        self.draw.text(
-            ((self.width - tw) // 2, y_title),
-            title_str,
-            font=font_title,
-            fill=Colors.TEXT_WHITE
-        )
-        
-        # Accent glowing bar under title
-        bar_w = int(self.width * 0.18)
-        self.draw.rectangle(
-            [(self.width - bar_w) // 2, y_title + th + 8, (self.width + bar_w) // 2, y_title + th + 12],
-            fill=Colors.ACCENT_CYAN
-        )
-
-        # 3. Team Crests & Score Board Card
-        margin_x = int(self.width * 0.05)
-        
-        if self.aspect_ratio == AspectRatio.RATIO_9_16:
-            y_card = 390
-            card_h = 380
-        elif self.aspect_ratio == AspectRatio.RATIO_4_5:
-            y_card = 280
-            card_h = 320
-        elif self.is_wide_landscape:
-            y_card = 200
-            card_h = 280
-        else:
-            y_card = 250
-            card_h = 310
-
-        card_bbox = (margin_x, y_card, self.width - margin_x, y_card + card_h)
-        
-        draw_rounded_card(
-            self.draw,
-            card_bbox,
-            radius=24,
-            fill=Colors.CARD_BG,
-            border=Colors.CARD_BORDER,
-            border_width=2
-        )
-
-        # Draw Team Logos
-        logo_sz = int(card_h * 0.42)
-        logo_size = (logo_sz, logo_sz)
-        
-        home_logo = load_team_logo(
-            logo_path=self.data.home_team.logo_path,
-            team_name=self.data.home_team.name,
-            size=logo_size,
-            fallback_text=self.data.home_team.short_name,
-            primary_color=self.data.home_team.primary_color or Colors.DEFAULT_HOME_COLOR
-        )
-        away_logo = load_team_logo(
-            logo_path=self.data.away_team.logo_path,
-            team_name=self.data.away_team.name,
-            size=logo_size,
-            fallback_text=self.data.away_team.short_name,
-            primary_color=self.data.away_team.primary_color or Colors.DEFAULT_AWAY_COLOR
-        )
-
-        logo_y = y_card + int(card_h * 0.12)
-        home_logo_x = margin_x + int(self.width * 0.06)
-        away_logo_x = self.width - margin_x - int(self.width * 0.06) - logo_size[0]
-        
-        self.image.paste(home_logo, (home_logo_x, logo_y), home_logo)
-        self.image.paste(away_logo, (away_logo_x, logo_y), away_logo)
-
-        # Team Names under logos
-        font_team_sz = 24 if self.is_vertical else 20
-        font_team = get_font("BODY", font_team_sz)
-        
-        ht_w, ht_h = get_text_dimensions(self.data.home_team.name, font_team)
-        ht_x = home_logo_x + (logo_size[0] - ht_w) // 2
-        self.draw.text((ht_x, logo_y + logo_size[1] + 12), self.data.home_team.name, font=font_team, fill=Colors.TEXT_WHITE)
-
-        at_w, at_h = get_text_dimensions(self.data.away_team.name, font_team)
-        at_x = away_logo_x + (logo_size[0] - at_w) // 2
-        self.draw.text((at_x, logo_y + logo_size[1] + 12), self.data.away_team.name, font=font_team, fill=Colors.TEXT_WHITE)
-
-        # Score Box in Center
-        score_box_w = int(self.width * 0.26)
-        score_box_h = int(card_h * 0.38)
-        score_x = (self.width - score_box_w) // 2
-        score_y = y_card + (card_h - score_box_h) // 2 - 5
-
-        self.draw.rounded_rectangle(
-            [score_x, score_y, score_x + score_box_w, score_y + score_box_h],
-            radius=18,
-            fill=Colors.ACCENT_CARD_BG,
-            outline=Colors.ACCENT_CYAN,
-            width=3
-        )
-
-        font_score_sz = 86 if self.is_vertical else 72
-        font_score = get_font("HEADER", font_score_sz)
-        score_str = f"{self.data.home_score} - {self.data.away_score}"
-        draw_text_centered(
-            self.draw,
-            score_str,
-            font_score,
-            (score_x, score_y, score_x + score_box_w, score_y + score_box_h),
-            fill=Colors.TEXT_WHITE
-        )
-
-        # 4. Goal Scorers Section
-        y_scorers = y_card + card_h + 25
-        if self.aspect_ratio == AspectRatio.RATIO_9_16:
-            scorers_h = 420
-        elif self.is_wide_landscape:
-            scorers_h = 240
-        else:
-            scorers_h = 280
-
-        scorers_bbox = (margin_x, y_scorers, self.width - margin_x, y_scorers + scorers_h)
-
-        draw_rounded_card(
-            self.draw,
-            scorers_bbox,
-            radius=20,
-            fill=Colors.CARD_BG,
-            border=Colors.CARD_BORDER,
-            border_width=2
-        )
-
-        # Section Header: "MARCATORI"
-        font_sc_head_sz = 34 if self.is_vertical else 28
-        font_sc_head = get_font("HEADER", font_sc_head_sz)
-        sc_head_text = "⚽  MARCATORI  ⚽"
-        tw, th = get_text_dimensions(sc_head_text, font_sc_head)
-        self.draw.text(
-            ((self.width - tw) // 2, y_scorers + 16),
-            sc_head_text,
-            font=font_sc_head,
-            fill=Colors.ACCENT_CYAN
-        )
-
-        # Divider line
-        self.draw.line(
-            [margin_x + 30, y_scorers + 58, self.width - margin_x - 30, y_scorers + 58],
-            fill=Colors.CARD_BORDER,
-            width=1
-        )
-
-        # Scorers listing
-        font_scorer_sz = 22 if self.is_vertical else 19
-        font_scorer_item = get_font("REGULAR", font_scorer_sz)
-        item_y_start = y_scorers + 72
-        
-        # Home Scorers
-        home_x = margin_x + int(self.width * 0.04)
-        for i, s in enumerate(self.data.home_scorers):
-            curr_y = item_y_start + i * 34
-            if curr_y + 25 > y_scorers + scorers_h - 10:
-                break
-            txt = f"• {s.to_summary()}"
-            self.draw.text((home_x, curr_y), txt, font=font_scorer_item, fill=Colors.TEXT_WHITE)
-
-        # Away Scorers
-        away_x = self.width // 2 + int(self.width * 0.04)
-        for i, s in enumerate(self.data.away_scorers):
-            curr_y = item_y_start + i * 34
-            if curr_y + 25 > y_scorers + scorers_h - 10:
-                break
-            txt = f"• {s.to_summary()}"
-            self.draw.text((away_x, curr_y), txt, font=font_scorer_item, fill=Colors.TEXT_WHITE)
-
-        # 5. MVP Highlight Tag (if present)
-        if self.data.mvp_name:
-            y_mvp = y_scorers + scorers_h + 20
-            mvp_w = self.width - (margin_x * 2)
-            mvp_h = 65 if self.is_vertical else 55
-            
-            draw_rounded_card(
-                self.draw,
-                (margin_x, y_mvp, margin_x + mvp_w, y_mvp + mvp_h),
-                radius=15,
-                fill=(40, 35, 20, 230),
-                border=Colors.ACCENT_GOLD,
-                border_width=2
-            )
-            
-            font_mvp_sz = 24 if self.is_vertical else 20
-            font_mvp = get_font("BODY", font_mvp_sz)
-            mvp_text = f"⭐  MIGLIORE IN CAMPO:  {self.data.mvp_name.upper()}"
-            draw_text_centered(
-                self.draw,
-                mvp_text,
-                font_mvp,
-                (margin_x, y_mvp, margin_x + mvp_w, y_mvp + mvp_h),
-                fill=Colors.TEXT_GOLD
-            )
-
-        # 6. Footer Info
-        loc_date = ""
-        if self.data.date or self.data.location:
-            parts = [p for p in [self.data.date, self.data.time, self.data.location] if p]
-            loc_date = "  |  ".join(parts)
-            
-        self.draw_footer_brand(loc_date)
-
-        return self.image
