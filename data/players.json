@@ -7,14 +7,14 @@
   },
   "dario": {
     "name": "Dario Stagi",
-    "role": "Centrocampista",
-    "number": "7",
+    "role": "Difensore",
+    "number": "16",
     "team": "A.C.C.V."
   },
   "diego": {
     "name": "Diego Leon",
     "role": "Attaccante",
-    "number": "11",
+    "number": "76",
     "team": "A.C.C.V."
   },
   "elia": {
@@ -26,37 +26,37 @@
   "f-citti": {
     "name": "Federico Citti",
     "role": "Centrocampista",
-    "number": "6",
+    "number": "69",
     "team": "A.C.C.V."
   },
   "fuccio": {
     "name": "Lorenzo Fuccio",
     "role": "Centrocampista",
-    "number": "14",
+    "number": "7",
     "team": "A.C.C.V."
   },
   "g-giannessi": {
     "name": "Gabriele Giannessi",
     "role": "Difensore",
-    "number": "4",
+    "number": "20",
     "team": "A.C.C.V."
   },
   "gigi": {
     "name": "Luigi Madda",
     "role": "Difensore",
-    "number": "12",
+    "number": "4",
     "team": "A.C.C.V."
   },
   "l-giannessi": {
     "name": "Lorenzo Giannessi",
     "role": "Difensore",
-    "number": "3",
+    "number": "11",
     "team": "A.C.C.V."
   },
   "laidel": {
     "name": "Laidel Adonis",
     "role": "Attaccante",
-    "number": "9",
+    "number": "99",
     "team": "A.C.C.V."
   },
   "martinelli": {
@@ -68,37 +68,37 @@
   "ricci": {
     "name": "Leonardo Ricci",
     "role": "Difensore",
-    "number": "5",
+    "number": "23",
     "team": "A.C.C.V."
   },
   "rossi": {
     "name": "Matteo Rossi",
     "role": "Difensore",
-    "number": "10",
+    "number": "3",
     "team": "A.C.C.V."
   },
   "s-citti": {
     "name": "Samuele Citti",
     "role": "Attaccante",
-    "number": "17",
+    "number": "32",
     "team": "A.C.C.V."
   },
   "samu-rama": {
     "name": "Samuele Ramacciotti",
     "role": "Portiere",
-    "number": "19",
+    "number": "12",
     "team": "A.C.C.V."
   },
   "tersitti": {
     "name": "Lorenzo Tersitti",
     "role": "Difensore",
-    "number": "13",
+    "number": "6",
     "team": "A.C.C.V."
   },
   "tintori": {
     "name": "Filippo Tintori",
     "role": "Attaccante",
-    "number": "20",
+    "number": "10",
     "team": "A.C.C.V."
   }
 }

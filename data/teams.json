@@ -1,6 +1,6 @@
 {
   "accv": {
-    "name": "A.C.C.V.",
+    "name": "ACCV",
     "short_name": "ACCV",
     "primary_color": [
       16,
@@ -13,9 +13,9 @@
     "name": "Antraccoli",
     "short_name": "ANT",
     "primary_color": [
-      59,
-      130,
-      246
+      7,
+      207,
+      11
     ],
     "logo_filename": "antraccoli.png"
   },
@@ -63,9 +63,9 @@
     "name": "Totutti",
     "short_name": "TOT",
     "primary_color": [
-      245,
-      158,
-      11
+      116,
+      150,
+      44
     ],
     "logo_filename": "totutti.png"
   },
@@ -80,42 +80,42 @@
     "logo_filename": "arrosto_fc.png"
   },
   "acab": {
-    "name": "Alle cinque al bar",
+    "name": "ACAB",
     "short_name": "ACB",
     "primary_color": [
-      16,
-      185,
-      129
+      0,
+      0,
+      0
     ],
     "logo_filename": "acab.png"
   },
   "underdogs": {
-    "name": "underdogs",
+    "name": "Underdogs",
     "short_name": "UND",
     "primary_color": [
-      16,
-      185,
-      129
+      135,
+      161,
+      152
     ],
     "logo_filename": "underdogs.png"
   },
   "seven_samba": {
-    "name": "seven samba",
+    "name": "Seven Samba",
     "short_name": "SVN",
     "primary_color": [
-      16,
-      185,
-      129
+      0,
+      0,
+      0
     ],
     "logo_filename": "seven_samba.png"
   },
   "hellas_peroni": {
-    "name": "hellas peroni",
+    "name": "Hellas Peroni",
     "short_name": "HPR",
     "primary_color": [
-      16,
-      185,
-      129
+      209,
+      179,
+      31
     ],
     "logo_filename": "hellas_peroni.png"
   },
@@ -123,20 +123,30 @@
     "name": "Lucca7Kicks",
     "short_name": "L7K",
     "primary_color": [
-      192,
-      28,
-      40
+      255,
+      255,
+      255
     ],
     "logo_filename": "lucca7kicks.png"
   },
   "las_furias_rosadas": {
-    "name": "Las furias rosadas",
+    "name": "Las Furias Rosadas",
     "short_name": "LFR",
     "primary_color": [
-      16,
-      185,
-      129
+      243,
+      114,
+      232
     ],
     "logo_filename": "las_furias_rosadas.png"
+  },
+  "imacellai": {
+    "name": "I Macellai",
+    "short_name": "IMC",
+    "primary_color": [
+      255,
+      255,
+      255
+    ],
+    "logo_filename": "imacellai.png"
   }
 }
