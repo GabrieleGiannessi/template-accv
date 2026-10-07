@@ -957,7 +957,6 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
             <input
               type="text"
               id="away-scorer-input"
-              placeholder="Nome marcatore avversario..."
               className="clean-input flex-1 px-3 py-1.5 text-xs rounded-lg"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && e.target.value.trim()) {
@@ -1488,8 +1487,13 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
       body: JSON.stringify({
         key: editingTeam.key,
         name: editingTeam.name,
+        extended_name: editingTeam.extended_name || "",
         short_name: editingTeam.short_name || editingTeam.name.slice(0, 3).toUpperCase(),
         primary_color: editingTeam.primary_color || [16, 185, 129],
+        secondary_color: editingTeam.secondary_color || [239, 68, 68],
+        tertiary_color: editingTeam.tertiary_color || [59, 130, 246],
+        rivalry: Number(editingTeam.rivalry) || 3,
+        notes: editingTeam.notes || "",
         logo_filename: editingTeam.logo_filename || `${editingTeam.key}.png`
       })
     })
@@ -1604,7 +1608,11 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
           ) : (
             <button
               onClick={() => {
-                setEditingTeam({ key: "", name: "", short_name: "", primary_color: [16, 185, 129] });
+                setEditingTeam({
+                  key: "", name: "", extended_name: "", short_name: "",
+                  primary_color: [16, 185, 129], secondary_color: [239, 68, 68],
+                  tertiary_color: [59, 130, 246], rivalry: 3, notes: ""
+                });
                 setIsTeamModalOpen(true);
               }}
               className="flex items-center space-x-1.5 px-3.5 py-2 bg-accvGreen hover:bg-accvGreenDark text-white text-xs font-bold rounded-xl shadow-sm transition-all"
@@ -1622,7 +1630,6 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={managerTab === "players" ? "Cerca calciatore per nome, ruolo o numero..." : "Cerca squadra per nome o sigla..."}
           className="clean-input w-full px-4 py-2.5 text-xs rounded-xl shadow-sm font-medium"
         />
         {searchQuery && (
@@ -1702,7 +1709,11 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
       {managerTab === "teams" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filteredTeams.map((t) => {
-            const rgbColor = t.primary_color ? `rgb(${t.primary_color[0]}, ${t.primary_color[1]}, ${t.primary_color[2]})` : "#10b981";
+            const teamColors = [
+              t.primary_color || [16, 185, 129],
+              t.secondary_color || [239, 68, 68],
+              t.tertiary_color || [59, 130, 246]
+            ];
             return (
               <div key={t.key} className="clean-card p-4 flex items-center justify-between hover:shadow-card-hover transition-all">
                 <div className="flex items-center space-x-3 truncate">
@@ -1726,7 +1737,9 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                     <div className="font-bold text-slate-900 text-xs truncate">{t.name}</div>
                     <div className="flex items-center space-x-2 mt-1">
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">{t.short_name}</span>
-                      <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: rgbColor }}></span>
+                      {teamColors.map((color, index) => (
+                        <span key={index} className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: `rgb(${color[0]}, ${color[1]}, ${color[2]})` }}></span>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -1734,7 +1747,15 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                 <div className="flex items-center space-x-1">
                   <button
                     onClick={() => {
-                      setEditingTeam(t);
+                      setEditingTeam({
+                        ...t,
+                        extended_name: t.extended_name || "",
+                        primary_color: t.primary_color || [16, 185, 129],
+                        secondary_color: t.secondary_color || [239, 68, 68],
+                        tertiary_color: t.tertiary_color || [59, 130, 246],
+                        rivalry: t.rivalry ?? 3,
+                        notes: t.notes || ""
+                      });
                       setIsTeamModalOpen(true);
                     }}
                     className="p-1.5 rounded-lg text-slate-500 hover:text-accvGreen hover:bg-slate-100 transition-all"
@@ -1776,7 +1797,6 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                   value={editingPlayer.key}
                   onChange={(e) => setEditingPlayer({ ...editingPlayer, key: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
                   className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-mono font-bold"
-                  placeholder="cognome o soprannome..."
                 />
               </div>
 
@@ -1788,7 +1808,6 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                   value={editingPlayer.name}
                   onChange={(e) => setEditingPlayer({ ...editingPlayer, name: e.target.value })}
                   className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"
-                  placeholder="es. Mario Rossi"
                 />
               </div>
 
@@ -1815,7 +1834,6 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                     value={editingPlayer.number}
                     onChange={(e) => setEditingPlayer({ ...editingPlayer, number: e.target.value })}
                     className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold text-center text-accvGreen"
-                    placeholder="es. 10"
                   />
                 </div>
               </div>
@@ -1843,7 +1861,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
       {/* MODAL: TEAM CREATE / EDIT */}
       {isTeamModalOpen && editingTeam && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="clean-card w-full max-w-md p-6 space-y-4 shadow-xl animate-scale-up">
+          <div className="clean-card w-full max-w-md max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-xl animate-scale-up">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-bold text-sm text-slate-900">
                 {editingTeam.name ? `Modifica Squadra: ${editingTeam.name}` : "Aggiungi Nuova Squadra Campionato"}
@@ -1853,32 +1871,40 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
 
             <form onSubmit={handleSaveTeam} className="space-y-3">
               <div>
-                <label className="text-[11px] font-bold text-slate-600 uppercase">Identificativo Univoco (es. 'real_nozzano')</label>
+                <label className="text-[11px] font-bold text-slate-600 uppercase">Codice</label>
                 <input
                   type="text"
                   required
                   value={editingTeam.key}
                   onChange={(e) => setEditingTeam({ ...editingTeam, key: e.target.value.toLowerCase().replace(/\s+/g, "_") })}
                   className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-mono font-bold"
-                  placeholder="nome_squadra..."
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-600 uppercase">Nome Ufficiale Squadra</label>
+                <label className="text-[11px] font-bold text-slate-600 uppercase">Nome</label>
                 <input
                   type="text"
                   required
                   value={editingTeam.name}
                   onChange={(e) => setEditingTeam({ ...editingTeam, name: e.target.value })}
                   className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"
-                  placeholder="es. Real Nozzano"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 uppercase">Nome Esteso</label>
+                <input
+                  type="text"
+                  value={editingTeam.extended_name}
+                  onChange={(e) => setEditingTeam({ ...editingTeam, extended_name: e.target.value })}
+                  className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-600 uppercase">Sigla Breve (3-4 lettere)</label>
+                  <label className="text-[11px] font-bold text-slate-600 uppercase">Sigla</label>
                   <input
                     type="text"
                     required
@@ -1886,32 +1912,60 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                     value={editingTeam.short_name}
                     onChange={(e) => setEditingTeam({ ...editingTeam, short_name: e.target.value.toUpperCase() })}
                     className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold text-center"
-                    placeholder="es. RNZ"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="text-[11px] font-bold text-slate-600 uppercase">Colore Sociale</label>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <input
-                      type="color"
-                      value={
-                        editingTeam.primary_color
-                          ? `#${editingTeam.primary_color.map((x) => x.toString(16).padStart(2, "0")).join("")}`
-                          : "#10b981"
-                      }
-                      onChange={(e) => {
-                        const hex = e.target.value;
-                        const r = parseInt(hex.slice(1, 3), 16);
-                        const g = parseInt(hex.slice(3, 5), 16);
-                        const b = parseInt(hex.slice(5, 7), 16);
-                        setEditingTeam({ ...editingTeam, primary_color: [r, g, b] });
-                      }}
-                      className="w-9 h-8 p-0 rounded-lg border border-slate-300 cursor-pointer"
-                    />
-                    <span className="text-[11px] text-slate-500 font-mono font-bold">RGB Primario</span>
-                  </div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 uppercase">Colori rappresentativi</label>
+                <div className="grid grid-cols-3 gap-3 mt-1">
+                  {[
+                    { field: "primary_color", label: "Primario" },
+                    { field: "secondary_color", label: "Secondario" },
+                    { field: "tertiary_color", label: "Terziario" }
+                  ].map(({ field, label }) => (
+                    <label key={field} className="flex items-center gap-2 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50">
+                      <input
+                        type="color"
+                        value={`#${editingTeam[field].map((x) => x.toString(16).padStart(2, "0")).join("")}`}
+                        onChange={(e) => {
+                          const hex = e.target.value;
+                          const rgb = [1, 3, 5].map((offset) => parseInt(hex.slice(offset, offset + 2), 16));
+                          setEditingTeam({ ...editingTeam, [field]: rgb });
+                        }}
+                        className="w-8 h-8 p-0 rounded border border-slate-300 cursor-pointer"
+                      />
+                      <span className="text-[10px] text-slate-600 font-semibold">{label}</span>
+                    </label>
+                  ))}
                 </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase">Grado di rivalità</label>
+                  <span className="text-xs font-bold text-accvGreenDark">{editingTeam.rivalry} / 5</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  step="1"
+                  value={editingTeam.rivalry}
+                  onChange={(e) => setEditingTeam({ ...editingTeam, rivalry: Number(e.target.value) })}
+                  className="w-full mt-2 accent-accvGreen"
+                />
+                <div className="flex justify-between text-[10px] text-slate-500"><span>Bassa</span><span>Alta</span></div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 uppercase">Note (facoltative)</label>
+                <textarea
+                  rows="2"
+                  value={editingTeam.notes}
+                  onChange={(e) => setEditingTeam({ ...editingTeam, notes: e.target.value })}
+                  className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium resize-y"
+                />
               </div>
 
               <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">

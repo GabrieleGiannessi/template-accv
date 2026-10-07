@@ -1,12 +1,25 @@
 {
   "accv": {
     "name": "ACCV",
+    "extended_name": "AC Chiavo Veronica",
     "short_name": "ACCV",
     "primary_color": [
       16,
       185,
       129
     ],
+    "secondary_color": [
+      255,
+      255,
+      255
+    ],
+    "tertiary_color": [
+      209,
+      186,
+      35
+    ],
+    "rivalry": 1,
+    "notes": "",
     "logo_filename": "accv.png"
   },
   "antraccoli": {
@@ -81,12 +94,25 @@
   },
   "acab": {
     "name": "ACAB",
+    "extended_name": "Alle Cinque al Bar",
     "short_name": "ACB",
     "primary_color": [
       0,
       0,
       0
     ],
+    "secondary_color": [
+      255,
+      255,
+      255
+    ],
+    "tertiary_color": [
+      237,
+      229,
+      2
+    ],
+    "rivalry": 4,
+    "notes": "",
     "logo_filename": "acab.png"
   },
   "underdogs": {

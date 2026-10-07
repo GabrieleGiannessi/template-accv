@@ -454,8 +454,13 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
                     key = payload["key"].lower().strip().replace(" ", "_")
                     teams[key] = {
                         "name": payload["name"],
+                        "extended_name": payload.get("extended_name", ""),
                         "short_name": payload.get("short_name", key[:3].upper()),
                         "primary_color": payload.get("primary_color", [16, 185, 129]),
+                        "secondary_color": payload.get("secondary_color", [239, 68, 68]),
+                        "tertiary_color": payload.get("tertiary_color", [59, 130, 246]),
+                        "rivalry": payload.get("rivalry", 3),
+                        "notes": payload.get("notes", ""),
                         "logo_filename": payload.get("logo_filename")
                     }
                 elif isinstance(payload, dict):
@@ -556,6 +561,11 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
                 "name": t.get("name", key.title()),
                 "short_name": t.get("short_name", key[:3].upper()),
                 "primary_color": t.get("primary_color", [16, 185, 129]),
+                "extended_name": t.get("extended_name", ""),
+                "secondary_color": t.get("secondary_color", [239, 68, 68]),
+                "tertiary_color": t.get("tertiary_color", [59, 130, 246]),
+                "rivalry": t.get("rivalry", 3),
+                "notes": t.get("notes", ""),
                 "logo_filename": logo_fn,
                 "logo_url": logo_url
             })
