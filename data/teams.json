@@ -53,43 +53,95 @@
   },
   "real_nozzano": {
     "name": "Real Nozzano",
+    "extended_name": "",
     "short_name": "REA",
     "primary_color": [
       147,
       51,
       234
     ],
-    "logo_filename": "real_nozzano.png"
+    "secondary_color": [
+      239,
+      68,
+      68
+    ],
+    "tertiary_color": [
+      59,
+      130,
+      246
+    ],
+    "notes": "",
+    "logo_filename": "real_nozzano.png",
+    "rivalry": 4
   },
   "san_ginese": {
     "name": "San Ginese",
+    "extended_name": "",
     "short_name": "SAN",
     "primary_color": [
       224,
       27,
       36
     ],
-    "logo_filename": "san_ginese.png"
+    "secondary_color": [
+      239,
+      68,
+      68
+    ],
+    "tertiary_color": [
+      59,
+      130,
+      246
+    ],
+    "notes": "",
+    "logo_filename": "san_ginese.png",
+    "rivalry": 4
   },
   "totutti": {
     "name": "Totutti",
+    "extended_name": "",
     "short_name": "TOT",
     "primary_color": [
       116,
       150,
       44
     ],
-    "logo_filename": "totutti.png"
+    "secondary_color": [
+      239,
+      68,
+      68
+    ],
+    "tertiary_color": [
+      59,
+      130,
+      246
+    ],
+    "notes": "",
+    "logo_filename": "totutti.png",
+    "rivalry": 4
   },
   "arrosto_fc": {
     "name": "Arrosto FC",
+    "extended_name": "",
     "short_name": "ARR",
     "primary_color": [
       255,
       120,
       0
     ],
-    "logo_filename": "arrosto_fc.png"
+    "secondary_color": [
+      239,
+      68,
+      68
+    ],
+    "tertiary_color": [
+      59,
+      130,
+      246
+    ],
+    "notes": "",
+    "logo_filename": "arrosto_fc.png",
+    "rivalry": 1
   },
   "acab": {
     "name": "ACAB",
@@ -116,62 +168,140 @@
   },
   "underdogs": {
     "name": "Underdogs",
+    "extended_name": "",
     "short_name": "UND",
     "primary_color": [
       135,
       161,
       152
     ],
-    "logo_filename": "underdogs.png"
+    "secondary_color": [
+      239,
+      68,
+      68
+    ],
+    "tertiary_color": [
+      59,
+      130,
+      246
+    ],
+    "notes": "",
+    "logo_filename": "underdogs.png",
+    "rivalry": 1
   },
   "seven_samba": {
     "name": "Seven Samba",
+    "extended_name": "",
     "short_name": "SVN",
     "primary_color": [
       0,
       0,
       0
     ],
-    "logo_filename": "seven_samba.png"
+    "secondary_color": [
+      239,
+      68,
+      68
+    ],
+    "tertiary_color": [
+      59,
+      130,
+      246
+    ],
+    "notes": "",
+    "logo_filename": "seven_samba.png",
+    "rivalry": 3
   },
   "hellas_peroni": {
     "name": "Hellas Peroni",
+    "extended_name": "",
     "short_name": "HPR",
     "primary_color": [
       209,
       179,
       31
     ],
-    "logo_filename": "hellas_peroni.png"
+    "secondary_color": [
+      20,
+      60,
+      219
+    ],
+    "tertiary_color": [
+      255,
+      255,
+      255
+    ],
+    "notes": "",
+    "logo_filename": "hellas_peroni.png",
+    "rivalry": 1
   },
   "lucca7kicks": {
     "name": "Lucca7Kicks",
+    "extended_name": "",
     "short_name": "L7K",
     "primary_color": [
       255,
       255,
       255
     ],
-    "logo_filename": "lucca7kicks.png"
+    "secondary_color": [
+      239,
+      68,
+      68
+    ],
+    "tertiary_color": [
+      59,
+      130,
+      246
+    ],
+    "notes": "",
+    "logo_filename": "lucca7kicks.png",
+    "rivalry": 2
   },
   "las_furias_rosadas": {
     "name": "Las Furias Rosadas",
+    "extended_name": "",
     "short_name": "LFR",
     "primary_color": [
       243,
       114,
       232
     ],
-    "logo_filename": "las_furias_rosadas.png"
+    "secondary_color": [
+      239,
+      68,
+      68
+    ],
+    "tertiary_color": [
+      59,
+      130,
+      246
+    ],
+    "notes": "",
+    "logo_filename": "las_furias_rosadas.png",
+    "rivalry": 1
   },
   "imacellai": {
     "name": "I Macellai",
+    "extended_name": "",
     "short_name": "IMC",
     "primary_color": [
       255,
       255,
       255
     ],
-    "logo_filename": "imacellai.png"
+    "secondary_color": [
+      239,
+      68,
+      68
+    ],
+    "tertiary_color": [
+      59,
+      130,
+      246
+    ],
+    "notes": "",
+    "logo_filename": "imacellai.png",
+    "rivalry": 1
   }
 }
