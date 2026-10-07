@@ -42,8 +42,8 @@
     "team": "A.C.C.V."
   },
   "gigi": {
-    "name": "Gigi",
-    "role": "Centrocampista",
+    "name": "Luigi Madda",
+    "role": "Difensore",
     "number": "12",
     "team": "A.C.C.V."
   },
@@ -85,7 +85,7 @@
   },
   "samu-rama": {
     "name": "Samuele Ramacciotti",
-    "role": "Centrocampista",
+    "role": "Portiere",
     "number": "19",
     "team": "A.C.C.V."
   },

@@ -19,16 +19,6 @@
     ],
     "logo_filename": "antraccoli.png"
   },
-  "athletic_beerbao": {
-    "name": "Athletic Beerbao",
-    "short_name": "ATH",
-    "primary_color": [
-      234,
-      88,
-      12
-    ],
-    "logo_filename": "athletic_beerbao.png"
-  },
   "blitzball": {
     "name": "Blitzball",
     "short_name": "BLI",
@@ -38,26 +28,6 @@
       246
     ],
     "logo_filename": "blitzball.png"
-  },
-  "fc_barcelona": {
-    "name": "Fc Barcelona",
-    "short_name": "FC ",
-    "primary_color": [
-      168,
-      85,
-      247
-    ],
-    "logo_filename": "fc_barcelona.png"
-  },
-  "inter_calcetto": {
-    "name": "Inter Calcetto",
-    "short_name": "INT",
-    "primary_color": [
-      37,
-      99,
-      235
-    ],
-    "logo_filename": "inter_calcetto.png"
   },
   "jagerbombers": {
     "name": "Jagerbombers",
@@ -69,46 +39,6 @@
     ],
     "logo_filename": "jagerbombers.png"
   },
-  "juventus_calcetto": {
-    "name": "Juventus Calcetto",
-    "short_name": "JUV",
-    "primary_color": [
-      71,
-      85,
-      105
-    ],
-    "logo_filename": "juventus_calcetto.png"
-  },
-  "milan_calcetto": {
-    "name": "Milan Calcetto",
-    "short_name": "MIL",
-    "primary_color": [
-      220,
-      38,
-      38
-    ],
-    "logo_filename": "milan_calcetto.png"
-  },
-  "napoli_calcetto": {
-    "name": "Napoli Calcetto",
-    "short_name": "NAP",
-    "primary_color": [
-      14,
-      165,
-      233
-    ],
-    "logo_filename": "napoli_calcetto.png"
-  },
-  "real_matrid": {
-    "name": "Real Matrid",
-    "short_name": "REA",
-    "primary_color": [
-      239,
-      68,
-      68
-    ],
-    "logo_filename": "real_matrid.png"
-  },
   "real_nozzano": {
     "name": "Real Nozzano",
     "short_name": "REA",
@@ -119,23 +49,13 @@
     ],
     "logo_filename": "real_nozzano.png"
   },
-  "roma_calcetto": {
-    "name": "Roma Calcetto",
-    "short_name": "ROM",
-    "primary_color": [
-      217,
-      119,
-      6
-    ],
-    "logo_filename": "roma_calcetto.png"
-  },
   "san_ginese": {
     "name": "San Ginese",
     "short_name": "SAN",
     "primary_color": [
-      20,
-      184,
-      166
+      224,
+      27,
+      36
     ],
     "logo_filename": "san_ginese.png"
   },
@@ -148,5 +68,75 @@
       11
     ],
     "logo_filename": "totutti.png"
+  },
+  "arrosto_fc": {
+    "name": "Arrosto FC",
+    "short_name": "ARR",
+    "primary_color": [
+      255,
+      120,
+      0
+    ],
+    "logo_filename": "arrosto_fc.png"
+  },
+  "acab": {
+    "name": "Alle cinque al bar",
+    "short_name": "ACB",
+    "primary_color": [
+      16,
+      185,
+      129
+    ],
+    "logo_filename": "acab.png"
+  },
+  "underdogs": {
+    "name": "underdogs",
+    "short_name": "UND",
+    "primary_color": [
+      16,
+      185,
+      129
+    ],
+    "logo_filename": "underdogs.png"
+  },
+  "seven_samba": {
+    "name": "seven samba",
+    "short_name": "SVN",
+    "primary_color": [
+      16,
+      185,
+      129
+    ],
+    "logo_filename": "seven_samba.png"
+  },
+  "hellas_peroni": {
+    "name": "hellas peroni",
+    "short_name": "HPR",
+    "primary_color": [
+      16,
+      185,
+      129
+    ],
+    "logo_filename": "hellas_peroni.png"
+  },
+  "lucca7kicks": {
+    "name": "Lucca7Kicks",
+    "short_name": "L7K",
+    "primary_color": [
+      192,
+      28,
+      40
+    ],
+    "logo_filename": "lucca7kicks.png"
+  },
+  "las_furias_rosadas": {
+    "name": "Las furias rosadas",
+    "short_name": "LFR",
+    "primary_color": [
+      16,
+      185,
+      129
+    ],
+    "logo_filename": "las_furias_rosadas.png"
   }
 }
