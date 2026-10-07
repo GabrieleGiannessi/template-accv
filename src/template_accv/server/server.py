@@ -452,17 +452,19 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
                 teams = load_teams()
                 if "key" in payload and "name" in payload:
                     key = payload["key"].lower().strip().replace(" ", "_")
-                    teams[key] = {
+                    team_data = {
                         "name": payload["name"],
                         "extended_name": payload.get("extended_name", ""),
                         "short_name": payload.get("short_name", key[:3].upper()),
                         "primary_color": payload.get("primary_color", [16, 185, 129]),
                         "secondary_color": payload.get("secondary_color", [239, 68, 68]),
                         "tertiary_color": payload.get("tertiary_color", [59, 130, 246]),
-                        "rivalry": payload.get("rivalry", 3),
                         "notes": payload.get("notes", ""),
                         "logo_filename": payload.get("logo_filename")
                     }
+                    if key != "accv":
+                        team_data["rivalry"] = payload.get("rivalry", 3)
+                    teams[key] = team_data
                 elif isinstance(payload, dict):
                     teams = payload
                 save_teams(teams)
@@ -556,7 +558,7 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
         for key, t in sorted(teams_dict.items(), key=lambda x: x[1].get("name", "")):
             logo_fn = t.get("logo_filename")
             logo_url = f"/assets/logos/{logo_fn}" if logo_fn else None
-            teams.append({
+            team_config = {
                 "key": key,
                 "name": t.get("name", key.title()),
                 "short_name": t.get("short_name", key[:3].upper()),
@@ -564,11 +566,13 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
                 "extended_name": t.get("extended_name", ""),
                 "secondary_color": t.get("secondary_color", [239, 68, 68]),
                 "tertiary_color": t.get("tertiary_color", [59, 130, 246]),
-                "rivalry": t.get("rivalry", 3),
                 "notes": t.get("notes", ""),
                 "logo_filename": logo_fn,
                 "logo_url": logo_url
-            })
+            }
+            if key != "accv":
+                team_config["rivalry"] = t.get("rivalry", 3)
+            teams.append(team_config)
         
         # 2. Players
         roster = load_roster()

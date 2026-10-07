@@ -92,10 +92,38 @@ function Icon({ name, className = "w-5 h-5", ...props }) {
       <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
+    ),
+    settings: (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317a1.724 1.724 0 013.35 0 1.724 1.724 0 002.573 1.066 1.724 1.724 0 012.37 2.37 1.724 1.724 0 001.066 2.573 1.724 1.724 0 010 3.35 1.724 1.724 0 00-1.066 2.573 1.724 1.724 0 01-2.37 2.37 1.724 1.724 0 00-2.573 1.066 1.724 1.724 0 01-3.35 0 1.724 1.724 0 00-2.573-1.066 1.724 1.724 0 01-2.37-2.37 1.724 1.724 0 00-1.066-2.573 1.724 1.724 0 010-3.35 1.724 1.724 0 001.066-2.573 1.724 1.724 0 012.37-2.37 1.724 1.724 0 002.573-1.066z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
     )
   };
   return icons[name] || null;
 }
+
+const PlayerRosterRow = React.memo(function PlayerRosterRow({ player, onEdit, onDelete, onPhotoUpload }) {
+  return (
+    <tr className="hover:bg-slate-50 transition-colors">
+      <td className="py-2 px-4">
+        <label className="relative cursor-pointer group flex items-center">
+          <input type="file" accept="image/png,image/webp" className="hidden" onChange={(e) => onPhotoUpload(e, player.key)} />
+          <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center group-hover:border-accvGreen">
+            {player.photo_url ? <img loading="lazy" decoding="async" src={player.photo_url} alt={player.name} className="w-full h-full object-cover object-top" /> : <span className="text-[10px] text-slate-400">No foto</span>}
+          </div>
+          <span className="ml-2 text-[10px] text-accvGreen group-hover:underline font-semibold">Cambia</span>
+        </label>
+      </td>
+      <td className="py-2 px-4 font-bold text-slate-900">{player.name}</td>
+      <td className="py-2 px-4 text-slate-600">{player.role}</td>
+      <td className="py-2 px-4 text-center font-bold text-accvGreenDark">#{player.number}</td>
+      <td className="py-2 px-4 text-right space-x-1">
+        <button onClick={() => onEdit(player)} className="p-1.5 rounded-lg text-slate-500 hover:text-accvGreen hover:bg-slate-100" title="Modifica Calciatore"><Icon name="edit" className="w-4 h-4" /></button>
+        <button onClick={() => onDelete(player.key, player.name)} className="p-1.5 rounded-lg text-slate-400 hover:text-accvRed hover:bg-red-50" title="Elimina Calciatore"><Icon name="trash" className="w-4 h-4" /></button>
+      </td>
+    </tr>
+  );
+});
 
 // --- Reusable Component: Background Selector (Emotions, Gallery, File Upload) ---
 function BackgroundSelector({
@@ -394,6 +422,10 @@ function App() {
       .then((res) => res.json())
       .then((data) => {
         setConfig(data);
+        const accvTeam = data.teams?.find((team) => team.key === "accv" || team.name.toUpperCase().includes("ACCV"));
+        if (accvTeam) {
+          setResultData((prev) => ({ ...prev, home_team: { ...prev.home_team, ...accvTeam } }));
+        }
         if (data.example_match && data.example_match.home_team) {
           const em = data.example_match;
           setResultData((prev) => ({
@@ -403,7 +435,7 @@ function App() {
             date: em.date || prev.date,
             time: em.time || prev.time,
             location: em.location || prev.location,
-            home_team: prev.home_team,
+            home_team: accvTeam ? { ...prev.home_team, ...accvTeam } : prev.home_team,
             away_team: em.away_team || prev.away_team,
             home_score: 0,
             away_score: 0,
@@ -647,7 +679,7 @@ function App() {
             { id: "next", label: "Prossima Partita", icon: "calendar" },
             { id: "mvp", label: "Migliore in Campo", icon: "star" },
             { id: "figurina", label: "Figurine Panini", icon: "badge" },
-            { id: "roster", label: "Rose & Squadre", icon: "users" }
+            { id: "roster", label: "Gestione", icon: "settings" }
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -656,7 +688,8 @@ function App() {
                 onClick={() => {
                   setActiveTab(tab.id);
                   if (tab.id === "result") {
-                    setResultData((prev) => ({ ...prev, home_team: { name: "A.C.C.V.", short_name: "ACCV", primary_color: [16, 185, 129] }, away_team: prev.away_team.name.toUpperCase().includes("ACCV") ? (config.teams.find((team) => !team.name.toUpperCase().includes("ACCV")) || prev.away_team) : prev.away_team, home_score: 0, away_score: 0, home_scorers: [], away_scorers: [] }));
+                    const accvTeam = config.teams?.find((team) => team.key === "accv" || team.name.toUpperCase().includes("ACCV"));
+                    setResultData((prev) => ({ ...prev, home_team: accvTeam || prev.home_team, away_team: prev.away_team.name.toUpperCase().includes("ACCV") ? (config.teams.find((team) => !team.name.toUpperCase().includes("ACCV")) || prev.away_team) : prev.away_team, home_score: 0, away_score: 0, home_scorers: [], away_scorers: [] }));
                   }
                   if (tab.id === "figurina" && selectedFormat !== "9:16") {
                     setSelectedFormat("9:16");
@@ -677,10 +710,10 @@ function App() {
       </header>
 
       {/* Main Studio Body: 2-Column Split Screen */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <main className={`flex-1 w-full mx-auto p-4 lg:p-6 ${activeTab === "roster" ? "max-w-none" : "max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6"}`}>
         
         {/* LEFT COLUMN: Controls & Forms (lg:col-span-7) */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className={activeTab === "roster" ? "w-full" : "lg:col-span-7 space-y-6"}>
           {activeTab === "result" && (
             <MatchResultForm
               data={resultData}
@@ -920,7 +953,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
 
           {/* Quick Roster Chips for ACCV */}
           <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
-            {config.players.map((p) => (
+            {config.players.filter((p) => !["Allenatore", "Dirigente"].includes(p.role)).map((p) => (
               <button
                 key={p.key}
                 type="button"
@@ -1034,7 +1067,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
             className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"
           >
             <option value="">Nessuno / Non specificato</option>
-            {config.players.map((p) => (
+            {config.players.filter((p) => !["Allenatore", "Dirigente"].includes(p.role)).map((p) => (
               <option key={p.key} value={p.name}>{p.name} (#{p.number})</option>
             ))}
           </select>
@@ -1206,7 +1239,7 @@ function MVPForm({ data, onChange, config, showToast }) {
       <div className="space-y-2">
         <label className="text-[11px] font-bold text-slate-600 uppercase">Seleziona Giocatore della Rosa</label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
-          {config.players.map((p) => (
+          {config.players.filter((p) => !["Allenatore", "Dirigente"].includes(p.role)).map((p) => (
             <button
               key={p.key}
               type="button"
@@ -1393,8 +1426,10 @@ function FigurinaForm({ data, onChange, config, onSelectPlayer }) {
 
 // --- TAB 5: Roster & Teams Manager (FULL CRUD) ---
 function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
-  const [managerTab, setManagerTab] = useState("players"); // players, teams
+  const [managerTab, setManagerTab] = useState("my-team"); // my-team, teams
   const [searchQuery, setSearchQuery] = useState("");
+  const [playerSort, setPlayerSort] = useState({ key: "name", direction: "asc" });
+  const [teamSort, setTeamSort] = useState({ key: "name", direction: "asc" });
 
   // Modals state for Player CRUD
   const [editingPlayer, setEditingPlayer] = useState(null); // null or player obj
@@ -1411,6 +1446,16 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
       alert("Inserisci nome e identificativo del calciatore.");
       return;
     }
+    const staffRole = ["Allenatore", "Dirigente"].includes(editingPlayer.role);
+    const jerseyNumber = editingPlayer.number === "" && staffRole ? null : Number(editingPlayer.number);
+    if (jerseyNumber !== null && (!Number.isInteger(jerseyNumber) || jerseyNumber < 1 || jerseyNumber > 99)) {
+      alert("Il numero di maglia deve essere compreso tra 1 e 99.");
+      return;
+    }
+    if (jerseyNumber !== null && (config.players || []).some((player) => Number(player.number) === jerseyNumber && player.key !== editingPlayer.key)) {
+      alert("Questo numero di maglia è già assegnato a un altro giocatore.");
+      return;
+    }
 
     fetch("/api/players", {
       method: "POST",
@@ -1419,7 +1464,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
         key: editingPlayer.key,
         name: editingPlayer.name,
         role: editingPlayer.role || "Giocatore",
-        number: editingPlayer.number || "",
+        number: jerseyNumber === null ? "" : String(jerseyNumber),
         team: "A.C.C.V."
       })
     })
@@ -1433,7 +1478,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
       .catch((err) => alert("Errore salvataggio: " + err));
   };
 
-  const handleDeletePlayer = (key, name) => {
+  const handleDeletePlayer = useCallback((key, name) => {
     if (!confirm(`Sei sicuro di voler eliminare ${name} dalla rosa?`)) return;
 
     fetch("/api/players/delete", {
@@ -1447,9 +1492,9 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
         showToast(`✓ Calciatore ${name} rimosso.`);
       })
       .catch((err) => alert("Errore eliminazione: " + err));
-  };
+  }, [onConfigReload, showToast]);
 
-  const handlePlayerPhotoUpload = (e, playerKey) => {
+  const handlePlayerPhotoUpload = useCallback((e, playerKey) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -1471,7 +1516,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
         });
     };
     reader.readAsDataURL(file);
-  };
+  }, [onConfigReload, showToast]);
 
   // --- TEAMS CRUD ---
   const handleSaveTeam = (e) => {
@@ -1492,7 +1537,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
         primary_color: editingTeam.primary_color || [16, 185, 129],
         secondary_color: editingTeam.secondary_color || [239, 68, 68],
         tertiary_color: editingTeam.tertiary_color || [59, 130, 246],
-        rivalry: Number(editingTeam.rivalry) || 3,
+        ...(editingTeam.key === "accv" ? {} : { rivalry: Number(editingTeam.rivalry) || 3 }),
         notes: editingTeam.notes || "",
         logo_filename: editingTeam.logo_filename || `${editingTeam.key}.png`
       })
@@ -1549,228 +1594,155 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
   };
 
   // Filtered lists
-  const filteredPlayers = (config.players || []).filter(
+  const filteredPlayers = useMemo(() => (config.players || []).filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
       String(p.number).includes(searchQuery)
-  );
+  ).sort((a, b) => {
+    const left = playerSort.key === "number" ? Number(a.number) : String(a[playerSort.key] || "").toLowerCase();
+    const right = playerSort.key === "number" ? Number(b.number) : String(b[playerSort.key] || "").toLowerCase();
+    return (left > right ? 1 : left < right ? -1 : 0) * (playerSort.direction === "asc" ? 1 : -1);
+  }), [config.players, searchQuery, playerSort]);
 
-  const filteredTeams = (config.teams || []).filter(
-    (t) =>
+  const filteredTeams = useMemo(() => (config.teams || []).filter(
+    (t) => t.key !== "accv" && !t.name.toUpperCase().includes("ACCV") && (
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.short_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    )
+  ).sort((a, b) => {
+    const left = teamSort.key === "rivalry" ? Number(a.rivalry || 3) : String(a[teamSort.key] || "").toLowerCase();
+    const right = teamSort.key === "rivalry" ? Number(b.rivalry || 3) : String(b[teamSort.key] || "").toLowerCase();
+    return (left > right ? 1 : left < right ? -1 : 0) * (teamSort.direction === "asc" ? 1 : -1);
+  }), [config.teams, searchQuery, teamSort]);
+
+  const accvTeam = (config.teams || []).find((team) => team.key === "accv" || team.name.toUpperCase().includes("ACCV"));
+  const accvPlayers = filteredPlayers;
+  const openAccvTeamEditor = () => {
+    if (!accvTeam) return;
+    setEditingTeam({
+      ...accvTeam,
+      isEditing: true,
+      extended_name: accvTeam.extended_name || "",
+      primary_color: accvTeam.primary_color || [16, 185, 129],
+      secondary_color: accvTeam.secondary_color || [239, 68, 68],
+      tertiary_color: accvTeam.tertiary_color || [59, 130, 246],
+      notes: accvTeam.notes || ""
+    });
+    setIsTeamModalOpen(true);
+  };
+
+  const handleEditPlayer = useCallback((player) => {
+    setEditingPlayer({ ...player, isEditing: true });
+    setIsPlayerModalOpen(true);
+  }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Subnavigation: Rosa ACCV vs Squadre Campionato */}
-      <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setManagerTab("players")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              managerTab === "players"
-                ? "bg-accvGreen text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-            }`}
-          >
-            <Icon name="users" className="w-4 h-4" />
-            <span>Rosa Calciatori ACCV ({config.players?.length})</span>
-          </button>
+    <div className="w-full max-w-none mx-auto space-y-5">
+      <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+        <button onClick={() => setManagerTab("my-team")} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold ${managerTab === "my-team" ? "bg-accvGreen text-white" : "text-slate-600 hover:bg-slate-100"}`}>
+          <Icon name="shield" className="w-4 h-4" /> Mia Squadra ({config.players?.length || 0})
+        </button>
+        <button onClick={() => setManagerTab("teams")} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold ${managerTab === "teams" ? "bg-accvGreen text-white" : "text-slate-600 hover:bg-slate-100"}`}>
+          <Icon name="users" className="w-4 h-4" /> Squadre Campionato ({filteredTeams.length})
+        </button>
+      </div>
 
-          <button
-            onClick={() => setManagerTab("teams")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              managerTab === "teams"
-                ? "bg-accvGreen text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-            }`}
-          >
-            <Icon name="shield" className="w-4 h-4" />
-            <span>Squadre Campionato ({config.teams?.length})</span>
-          </button>
+      {managerTab === "my-team" && accvTeam && (
+        <section className="clean-card p-5 lg:p-7 flex flex-col lg:flex-row lg:items-center gap-6">
+          <label className="relative cursor-pointer group shrink-0">
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleTeamLogoUpload(e, accvTeam.key)} />
+            <div className="w-28 h-28 rounded-2xl bg-slate-50 border border-slate-200 p-3 flex items-center justify-center group-hover:border-accvGreen">
+              {accvTeam.logo_url ? <img src={accvTeam.logo_url} alt={accvTeam.name} className="w-full h-full object-contain" /> : <span className="font-bold text-xl text-slate-400">{accvTeam.short_name}</span>}
+            </div>
+            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white border border-slate-200 px-2 py-1 text-[10px] font-semibold text-accvGreen">Cambia logo</span>
+          </label>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-accvGreen">Squadra protagonista</div>
+                <h2 className="mt-1 text-2xl font-header font-bold text-slate-900">{accvTeam.name}</h2>
+                {accvTeam.extended_name && <div className="mt-1 text-sm text-slate-600">{accvTeam.extended_name}</div>}
+              </div>
+              <button onClick={openAccvTeamEditor} className="flex items-center gap-2 px-4 py-2 bg-accvGreen hover:bg-accvGreenDark text-white text-xs font-bold rounded-xl shadow-sm">
+                <Icon name="edit" className="w-4 h-4" /> Modifica squadra
+              </button>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-600">
+              <span className="rounded-lg bg-slate-100 px-2.5 py-1.5 font-bold">Sigla: {accvTeam.short_name}</span>
+              {[accvTeam.primary_color || [16, 185, 129], accvTeam.secondary_color || [239, 68, 68], accvTeam.tertiary_color || [59, 130, 246]].map((color, index) => (
+                <span key={index} title={`Colore ${index + 1}`} className="w-5 h-5 rounded-full border border-slate-300" style={{ backgroundColor: `rgb(${color[0]}, ${color[1]}, ${color[2]})` }} />
+              ))}
+              {accvTeam.notes && <span className="basis-full">{accvTeam.notes}</span>}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="clean-card p-4 lg:p-5 space-y-3 flex flex-col">
+        <div className="order-2 flex flex-col lg:flex-row lg:items-center gap-3 border-t border-slate-100 pt-3">
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="clean-input w-full lg:flex-1 px-4 py-2.5 text-xs rounded-xl font-medium" />
+          {managerTab === "teams" && (
+            <div className="flex items-center gap-2">
+              <label className="text-[10px] font-bold uppercase text-slate-500">Ordina per</label>
+              <select value={teamSort.key} onChange={(e) => setTeamSort((prev) => ({ ...prev, key: e.target.value }))} className="clean-input px-3 py-2 text-xs rounded-lg">
+                <option value="name">Nome</option><option value="extended_name">Nome esteso</option><option value="short_name">Sigla</option><option value="rivalry">Rivalità</option>
+              </select>
+              <button onClick={() => setTeamSort((prev) => ({ ...prev, direction: prev.direction === "asc" ? "desc" : "asc" }))} className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold" aria-label="Inverti ordinamento">{teamSort.direction === "asc" ? "↑" : "↓"}</button>
+            </div>
+          )}
         </div>
-
-        {/* Global Action Button */}
-        <div>
-          {managerTab === "players" ? (
-            <button
-              onClick={() => {
-                setEditingPlayer({ key: "", name: "", role: "Centrocampista", number: "" });
-                setIsPlayerModalOpen(true);
-              }}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-accvGreen hover:bg-accvGreenDark text-white text-xs font-bold rounded-xl shadow-sm transition-all"
-            >
-              <Icon name="plus" className="w-4 h-4" />
-              <span>Nuovo Calciatore</span>
+        <div className="order-1 flex flex-col items-start gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">{managerTab === "my-team" ? "Giocatori della rosa" : "Squadre del campionato"}</h2>
+            <p className="text-[11px] text-slate-500">{managerTab === "my-team" ? `${filteredPlayers.length} elementi` : `${filteredTeams.length} squadre`}</p>
+          </div>
+          {managerTab === "my-team" ? (
+            <button onClick={() => { setEditingPlayer({ key: "", name: "", role: "Centrocampista", number: "", isEditing: false }); setIsPlayerModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-accvGreen hover:bg-accvGreenDark text-white text-xs font-bold rounded-xl shadow-sm">
+              <Icon name="plus" className="w-4 h-4" /> Nuovo Calciatore
             </button>
           ) : (
-            <button
-              onClick={() => {
-                setEditingTeam({
-                  key: "", name: "", extended_name: "", short_name: "",
-                  primary_color: [16, 185, 129], secondary_color: [239, 68, 68],
-                  tertiary_color: [59, 130, 246], rivalry: 3, notes: ""
-                });
-                setIsTeamModalOpen(true);
-              }}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-accvGreen hover:bg-accvGreenDark text-white text-xs font-bold rounded-xl shadow-sm transition-all"
-            >
-              <Icon name="plus" className="w-4 h-4" />
-              <span>Nuova Squadra</span>
+            <button onClick={() => { setEditingTeam({ key: "", name: "", extended_name: "", short_name: "", primary_color: [16, 185, 129], secondary_color: [239, 68, 68], tertiary_color: [59, 130, 246], rivalry: 3, notes: "" }); setIsTeamModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-accvGreen hover:bg-accvGreenDark text-white text-xs font-bold rounded-xl shadow-sm">
+              <Icon name="plus" className="w-4 h-4" /> Nuova Squadra
             </button>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="clean-input w-full px-4 py-2.5 text-xs rounded-xl shadow-sm font-medium"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery("")}
-            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs font-bold"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-
-      {/* SECTION 1: CALCIATORI ACCV CRUD LIST */}
-      {managerTab === "players" && (
-        <div className="clean-card overflow-hidden">
+      {managerTab === "my-team" && (
+        <div className="clean-card overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold">
                 <th className="py-3 px-4">Foto Sagoma</th>
-                <th className="py-3 px-4">Nome Completo</th>
-                <th className="py-3 px-4">Ruolo</th>
-                <th className="py-3 px-4 text-center">N° Maglia</th>
+                {[{ key: "name", label: "Nome Completo" }, { key: "role", label: "Ruolo" }, { key: "number", label: "N° Maglia" }].map(({ key, label }) => (
+                  <th key={key} className={`py-3 px-4 ${key === "number" ? "text-center" : ""}`}>
+                    <button onClick={() => setPlayerSort((prev) => ({ key, direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc" }))} className="hover:text-accvGreen">{label} {playerSort.key === key ? (playerSort.direction === "asc" ? "↑" : "↓") : "↕"}</button>
+                  </th>
+                ))}
                 <th className="py-3 px-4 text-right">Azioni</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
-              {filteredPlayers.map((p) => (
-                <tr key={p.key} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-2 px-4">
-                    <label className="relative cursor-pointer group flex items-center">
-                      <input
-                        type="file"
-                        accept="image/png,image/webp"
-                        className="hidden"
-                        onChange={(e) => handlePlayerPhotoUpload(e, p.key)}
-                      />
-                      <div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center group-hover:border-accvGreen shadow-sm">
-                        {p.photo_url ? (
-                          <img src={p.photo_url} alt={p.name} className="w-full h-full object-cover object-top" />
-                        ) : (
-                          <div className="text-[10px] text-slate-400 font-bold">No foto</div>
-                        )}
-                      </div>
-                      <span className="ml-2 text-[10px] text-accvGreen group-hover:underline font-semibold">Cambia</span>
-                    </label>
-                  </td>
-                  <td className="py-2 px-4 font-bold text-slate-900">{p.name}</td>
-                  <td className="py-2 px-4 text-slate-600">{p.role}</td>
-                  <td className="py-2 px-4 text-center font-bold text-accvGreenDark">#{p.number}</td>
-                  <td className="py-2 px-4 text-right space-x-1">
-                    <button
-                      onClick={() => {
-                        setEditingPlayer(p);
-                        setIsPlayerModalOpen(true);
-                      }}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-accvGreen hover:bg-slate-100 transition-all"
-                      title="Modifica Calciatore"
-                    >
-                      <Icon name="edit" className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeletePlayer(p.key, p.name)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-accvRed hover:bg-red-50 transition-all"
-                      title="Elimina Calciatore"
-                    >
-                      <Icon name="trash" className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
+              {accvPlayers.map((player) => (
+                <PlayerRosterRow key={player.key} player={player} onEdit={handleEditPlayer} onDelete={handleDeletePlayer} onPhotoUpload={handlePlayerPhotoUpload} />
               ))}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* SECTION 2: SQUADRE DEL CAMPIONATO CRUD GRID */}
       {managerTab === "teams" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
           {filteredTeams.map((t) => {
-            const teamColors = [
-              t.primary_color || [16, 185, 129],
-              t.secondary_color || [239, 68, 68],
-              t.tertiary_color || [59, 130, 246]
-            ];
+            const teamColors = [t.primary_color || [16, 185, 129], t.secondary_color || [239, 68, 68], t.tertiary_color || [59, 130, 246]];
             return (
-              <div key={t.key} className="clean-card p-4 flex items-center justify-between hover:shadow-card-hover transition-all">
-                <div className="flex items-center space-x-3 truncate">
-                  <label className="relative cursor-pointer group">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleTeamLogoUpload(e, t.key)}
-                    />
-                    <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center group-hover:border-accvGreen shadow-sm">
-                      {t.logo_url ? (
-                        <img src={t.logo_url} alt={t.name} className="w-full h-full object-contain" />
-                      ) : (
-                        <span className="font-bold text-xs text-slate-400">{t.short_name}</span>
-                      )}
-                    </div>
-                  </label>
-
-                  <div className="truncate">
-                    <div className="font-bold text-slate-900 text-xs truncate">{t.name}</div>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">{t.short_name}</span>
-                      {teamColors.map((color, index) => (
-                        <span key={index} className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: `rgb(${color[0]}, ${color[1]}, ${color[2]})` }}></span>
-                      ))}
-                    </div>
-                  </div>
+              <div key={t.key} className="clean-card min-h-44 p-6 flex items-center justify-between gap-4 hover:shadow-card-hover transition-all">
+                <div className="flex items-center gap-4 min-w-0">
+                  <label className="relative cursor-pointer group shrink-0"><input type="file" accept="image/*" className="hidden" onChange={(e) => handleTeamLogoUpload(e, t.key)} /><div className="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-200 p-2 flex items-center justify-center group-hover:border-accvGreen">{t.logo_url ? <img src={t.logo_url} alt={t.name} className="w-full h-full object-contain" /> : <span className="font-bold text-lg text-slate-400">{t.short_name}</span>}</div></label>
+                  <div className="min-w-0"><div className="font-bold text-slate-900 text-base truncate">{t.name}</div>{t.extended_name && <div className="text-xs text-slate-500 truncate mt-1">{t.extended_name}</div>}<div className="flex items-center gap-2 mt-2"><span className="text-[10px] font-bold px-2 py-1 rounded bg-slate-100 text-slate-600">{t.short_name}</span>{teamColors.map((color, index) => <span key={index} className="w-4 h-4 rounded-full border border-slate-300" style={{ backgroundColor: `rgb(${color[0]}, ${color[1]}, ${color[2]})` }} />)}</div><div className="mt-2 text-xs text-slate-500">Rivalità {t.rivalry ?? 3}/5</div></div>
                 </div>
-
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => {
-                      setEditingTeam({
-                        ...t,
-                        extended_name: t.extended_name || "",
-                        primary_color: t.primary_color || [16, 185, 129],
-                        secondary_color: t.secondary_color || [239, 68, 68],
-                        tertiary_color: t.tertiary_color || [59, 130, 246],
-                        rivalry: t.rivalry ?? 3,
-                        notes: t.notes || ""
-                      });
-                      setIsTeamModalOpen(true);
-                    }}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-accvGreen hover:bg-slate-100 transition-all"
-                    title="Modifica Squadra"
-                  >
-                    <Icon name="edit" className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTeam(t.key, t.name)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-accvRed hover:bg-red-50 transition-all"
-                    title="Elimina Squadra"
-                  >
-                    <Icon name="trash" className="w-4 h-4" />
-                  </button>
-                </div>
+                <div className="flex flex-col gap-2 shrink-0"><button onClick={() => { setEditingTeam({ ...t, isEditing: true, extended_name: t.extended_name || "", primary_color: t.primary_color || [16, 185, 129], secondary_color: t.secondary_color || [239, 68, 68], tertiary_color: t.tertiary_color || [59, 130, 246], rivalry: t.rivalry ?? 3, notes: t.notes || "" }); setIsTeamModalOpen(true); }} className="p-2 rounded-lg text-slate-500 hover:text-accvGreen hover:bg-slate-100" title="Modifica Squadra"><Icon name="edit" className="w-4 h-4" /></button><button onClick={() => handleDeleteTeam(t.key, t.name)} className="p-2 rounded-lg text-slate-400 hover:text-accvRed hover:bg-red-50" title="Elimina Squadra"><Icon name="trash" className="w-4 h-4" /></button></div>
               </div>
             );
           })}
@@ -1794,6 +1766,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                 <input
                   type="text"
                   required
+                  readOnly={Boolean(editingPlayer.isEditing)}
                   value={editingPlayer.key}
                   onChange={(e) => setEditingPlayer({ ...editingPlayer, key: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
                   className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-mono font-bold"
@@ -1813,7 +1786,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-600 uppercase">Ruolo in Campo</label>
+                  <label className="text-[11px] font-bold text-slate-600 uppercase">Ruolo</label>
                   <select
                     value={editingPlayer.role}
                     onChange={(e) => setEditingPlayer({ ...editingPlayer, role: e.target.value })}
@@ -1823,14 +1796,19 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                     <option value="Difensore">Difensore</option>
                     <option value="Centrocampista">Centrocampista</option>
                     <option value="Attaccante">Attaccante</option>
-                    <option value="Pivot / Attaccante">Pivot / Attaccante</option>
+                    <option value="Allenatore">Allenatore</option>
+                    <option value="Dirigente">Dirigente</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 uppercase">Numero di Maglia</label>
                   <input
-                    type="text"
+                    type="number"
+                    required={!['Allenatore', 'Dirigente'].includes(editingPlayer.role)}
+                    min="1"
+                    max="99"
+                    step="1"
                     value={editingPlayer.number}
                     onChange={(e) => setEditingPlayer({ ...editingPlayer, number: e.target.value })}
                     className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold text-center text-accvGreen"
@@ -1875,6 +1853,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                 <input
                   type="text"
                   required
+                  readOnly={Boolean(editingTeam.isEditing)}
                   value={editingTeam.key}
                   onChange={(e) => setEditingTeam({ ...editingTeam, key: e.target.value.toLowerCase().replace(/\s+/g, "_") })}
                   className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-mono font-bold"
@@ -1941,22 +1920,24 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-slate-600 uppercase">Grado di rivalità</label>
-                  <span className="text-xs font-bold text-accvGreenDark">{editingTeam.rivalry} / 5</span>
+              {editingTeam.key !== "accv" && (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase">Grado di rivalità</label>
+                    <span className="text-xs font-bold text-accvGreenDark">{editingTeam.rivalry} / 5</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    step="1"
+                    value={editingTeam.rivalry}
+                    onChange={(e) => setEditingTeam({ ...editingTeam, rivalry: Number(e.target.value) })}
+                    className="w-full mt-2 accent-accvGreen"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500"><span>Bassa</span><span>Alta</span></div>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="1"
-                  value={editingTeam.rivalry}
-                  onChange={(e) => setEditingTeam({ ...editingTeam, rivalry: Number(e.target.value) })}
-                  className="w-full mt-2 accent-accvGreen"
-                />
-                <div className="flex justify-between text-[10px] text-slate-500"><span>Bassa</span><span>Alta</span></div>
-              </div>
+              )}
 
               <div>
                 <label className="text-[11px] font-bold text-slate-600 uppercase">Note (facoltative)</label>
