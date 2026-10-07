@@ -321,18 +321,10 @@ function App() {
     location: "Centro Sportivo ACCV - Campo A",
     home_team: { name: "A.C.C.V.", short_name: "ACCV", primary_color: [16, 185, 129] },
     away_team: { name: "REAL MATRID", short_name: "MAT", primary_color: [239, 68, 68] },
-    home_score: 7,
-    away_score: 4,
-    home_scorers: [
-      { name: "Rossi M.", goals: 3 },
-      { name: "Bianchi L.", goals: 2 },
-      { name: "Verdi G.", goals: 1 },
-      { name: "Esposito A.", goals: 1 }
-    ],
-    away_scorers: [
-      { name: "Ferrari F.", goals: 2 },
-      { name: "Romano K.", goals: 2 }
-    ],
+    home_score: 0,
+    away_score: 0,
+    home_scorers: [],
+    away_scorers: [],
     mvp_name: "Mario Rossi",
     emotion: "felicita",
     bg_path: null,
@@ -411,12 +403,12 @@ function App() {
             date: em.date || prev.date,
             time: em.time || prev.time,
             location: em.location || prev.location,
-            home_team: em.home_team || prev.home_team,
+            home_team: prev.home_team,
             away_team: em.away_team || prev.away_team,
-            home_score: em.home_score ?? prev.home_score,
-            away_score: em.away_score ?? prev.away_score,
-            home_scorers: em.home_scorers || prev.home_scorers,
-            away_scorers: em.away_scorers || prev.away_scorers,
+            home_score: 0,
+            away_score: 0,
+            home_scorers: [],
+            away_scorers: [],
             mvp_name: em.mvp?.player_name || prev.mvp_name
           }));
         }
@@ -640,10 +632,10 @@ function App() {
           </div>
           <div>
             <h1 className="font-header text-2xl lg:text-3xl tracking-widest text-slate-900 leading-none">
-              A.C.C.V. <span className="text-accvGreen font-bold">STUDIO</span>
+              Designer Lab
             </h1>
             <p className="text-[11px] text-accvGoldDark uppercase tracking-wider font-bold">
-              Automazione Grafiche & Rose Campionato
+              <strong>ACCV</strong>: <strong>Automazione Grafiche & Rose Campionato</strong>
             </p>
           </div>
         </div>
@@ -663,6 +655,9 @@ function App() {
                 key={tab.id}
                 onClick={() => {
                   setActiveTab(tab.id);
+                  if (tab.id === "result") {
+                    setResultData((prev) => ({ ...prev, home_team: { name: "A.C.C.V.", short_name: "ACCV", primary_color: [16, 185, 129] }, away_team: prev.away_team.name.toUpperCase().includes("ACCV") ? (config.teams.find((team) => !team.name.toUpperCase().includes("ACCV")) || prev.away_team) : prev.away_team, home_score: 0, away_score: 0, home_scorers: [], away_scorers: [] }));
+                  }
                   if (tab.id === "figurina" && selectedFormat !== "9:16") {
                     setSelectedFormat("9:16");
                   }
@@ -761,6 +756,14 @@ function App() {
 // --- TAB 1: Match Result Form ---
 function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
   const updateField = (field, val) => onChange({ ...data, [field]: val });
+  const homeIsAccv = data.home_team.name.toUpperCase().includes("ACCV");
+  const awayIsAccv = data.away_team.name.toUpperCase().includes("ACCV");
+  const accvIsHome = homeIsAccv || !awayIsAccv;
+  const accvScorerType = accvIsHome ? "home" : "away";
+  const opponentScorerType = accvIsHome ? "away" : "home";
+  const accvScorers = data[accvIsHome ? "home_scorers" : "away_scorers"];
+  const opponentScorers = data[accvIsHome ? "away_scorers" : "home_scorers"];
+  const opponentTeam = accvIsHome ? data.away_team : data.home_team;
 
   const addScorer = (teamType, playerName = "Giocatore", goals = 1) => {
     const listKey = teamType === "home" ? "home_scorers" : "away_scorers";
@@ -825,7 +828,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               }}
               className="clean-input w-full text-xs font-bold rounded-lg p-2 text-center truncate"
             >
-              {config.teams.map((t) => (
+              {config.teams.filter((t) => t.name !== data.away_team.name).map((t) => (
                 <option key={t.key} value={t.name}>{t.name}</option>
               ))}
             </select>
@@ -875,7 +878,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               }}
               className="clean-input w-full text-xs font-bold rounded-lg p-2 text-center truncate"
             >
-              {config.teams.map((t) => (
+              {config.teams.filter((t) => t.name !== data.home_team.name).map((t) => (
                 <option key={t.key} value={t.name}>{t.name}</option>
               ))}
             </select>
@@ -911,32 +914,32 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
         {/* Home Scorers */}
         <div className="space-y-2">
           <div className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-            <span>Marcatori {data.home_team.name}:</span>
+            <span>Marcatori ACCV:</span>
             <span className="text-[11px] text-slate-500">Clicca sui giocatori della rosa sotto per aggiungere un gol:</span>
           </div>
 
           {/* Quick Roster Chips for ACCV */}
-          <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+          <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
             {config.players.map((p) => (
               <button
                 key={p.key}
                 type="button"
-                onClick={() => addScorer("home", p.name.split(" ")[0])}
+                onClick={() => addScorer(accvScorerType, p.name)}
                 className="px-2.5 py-1 text-[11px] rounded-lg bg-white hover:bg-accvGreen hover:text-white text-slate-700 transition-all font-semibold border border-slate-200 shadow-sm"
               >
-                +{p.name.split(" ")[0]}
+                +{p.name}
               </button>
             ))}
           </div>
 
           {/* Current Home Scorers List */}
           <div className="flex flex-wrap gap-2 pt-1">
-            {data.home_scorers.map((s, idx) => (
+            {accvScorers.map((s, idx) => (
               <div key={idx} className="flex items-center space-x-1.5 bg-accvGreenLight border border-accvGreen/30 px-3 py-1 rounded-lg text-xs font-bold text-accvGreenDark">
                 <span>{s.name}</span>
                 <span>({s.goals})</span>
                 <button
-                  onClick={() => removeOrDecrementScorer("home", idx)}
+                  onClick={() => removeOrDecrementScorer(accvScorerType, idx)}
                   type="button"
                   className="text-accvRed hover:text-red-700 ml-1 font-bold"
                 >
@@ -949,7 +952,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
 
         {/* Away Scorers Quick Input */}
         <div className="pt-2 border-t border-slate-100 space-y-2">
-          <div className="text-xs font-semibold text-slate-700">Marcatori {data.away_team.name}:</div>
+          <div className="text-xs font-semibold text-slate-700">Marcatori {opponentTeam.name}:</div>
           <div className="flex gap-2">
             <input
               type="text"
@@ -958,7 +961,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               className="clean-input flex-1 px-3 py-1.5 text-xs rounded-lg"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && e.target.value.trim()) {
-                  addScorer("away", e.target.value.trim());
+                  addScorer(opponentScorerType, e.target.value.trim());
                   e.target.value = "";
                 }
               }}
@@ -968,7 +971,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               onClick={() => {
                 const inp = document.getElementById("away-scorer-input");
                 if (inp && inp.value.trim()) {
-                  addScorer("away", inp.value.trim());
+                  addScorer(opponentScorerType, inp.value.trim());
                   inp.value = "";
                 }
               }}
@@ -978,12 +981,12 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
             </button>
           </div>
           <div className="flex flex-wrap gap-2 pt-1">
-            {data.away_scorers.map((s, idx) => (
+            {opponentScorers.map((s, idx) => (
               <div key={idx} className="flex items-center space-x-1.5 bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg text-xs font-bold text-slate-800">
                 <span>{s.name}</span>
                 <span className="text-slate-500">({s.goals})</span>
                 <button
-                  onClick={() => removeOrDecrementScorer("away", idx)}
+                  onClick={() => removeOrDecrementScorer(opponentScorerType, idx)}
                   type="button"
                   className="text-accvRed hover:text-red-700 ml-1 font-bold"
                 >
