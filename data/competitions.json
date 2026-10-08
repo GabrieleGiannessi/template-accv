@@ -1,0 +1,43 @@
+[
+  {
+    "key": "perini-carraia-b",
+    "description": "Campionato Perini/Carraia B",
+    "notes": "",
+    "logo_filename": "competition_perini-carraia-b.png",
+    "seasons": [
+      {
+        "season_key": "season2026-2027",
+        "team_keys": [
+          "accv",
+          "arrosto_fc",
+          "hellas_peroni",
+          "jagerbombers",
+          "lucca7kicks",
+          "san_ginese",
+          "totutti",
+          "underdogs",
+          "seven_samba",
+          "real_nozzano",
+          "las_furias_rosadas",
+          "imacellai",
+          "acab"
+        ]
+      },
+      {
+        "season_key": "season2025-2026",
+        "team_keys": [
+          "acab",
+          "antraccoli",
+          "blitzball",
+          "real_nozzano",
+          "seven_samba",
+          "totutti",
+          "san_ginese",
+          "lucca7kicks",
+          "jagerbombers",
+          "accv"
+        ]
+      }
+    ]
+  }
+]

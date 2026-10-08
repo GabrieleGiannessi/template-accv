@@ -43,6 +43,23 @@ from template_accv.generators.figurina import (
 WEB_DIR = BASE_DIR / "web"
 TEAMS_FILE = DATA_DIR / "teams.json"
 PLAYERS_FILE = DATA_DIR / "players.json"
+SEASONS_FILE = DATA_DIR / "seasons.json"
+COMPETITIONS_FILE = DATA_DIR / "competitions.json"
+
+
+def load_records(path: Path) -> list:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
+def save_records(path: Path, records: list):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(records, f, indent=2, ensure_ascii=False)
 
 
 def load_teams() -> Dict[str, dict]:
@@ -314,6 +331,10 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
             self.handle_get_players()
         elif path == "/api/teams":
             self.handle_get_teams()
+        elif path == "/api/seasons":
+            self.send_json({"seasons": load_records(SEASONS_FILE)})
+        elif path == "/api/competitions":
+            self.send_json({"competitions": load_records(COMPETITIONS_FILE)})
         elif path.startswith("/assets/"):
             # Serve asset file directly
             rel_path = path[len("/assets/"):]
@@ -481,6 +502,30 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
                 else:
                     self.send_json({"status": "error", "message": "Squadra non trovata"}, status=404)
 
+            elif path in ("/api/seasons", "/api/seasons/delete", "/api/competitions", "/api/competitions/delete"):
+                payload = json.loads(post_data.decode("utf-8")) if post_data else {}
+                is_season = path.startswith("/api/seasons")
+                records_file = SEASONS_FILE if is_season else COMPETITIONS_FILE
+                records_key = "seasons" if is_season else "competitions"
+                records = load_records(records_file)
+                key = str(payload.get("key", "")).strip()
+                if path.endswith("/delete"):
+                    records = [item for item in records if item.get("key") != key]
+                else:
+                    if not key or not str(payload.get("description", "")).strip():
+                        self.send_json({"status": "error", "error": "Codice e descrizione sono obbligatori"}, status=400)
+                        return
+                    item = {"key": key, "description": str(payload["description"]).strip(), "notes": payload.get("notes", "")}
+                    if not is_season:
+                        item.update({"logo_filename": payload.get("logo_filename", ""), "seasons": payload.get("seasons", [])})
+                    existing = next((i for i, record in enumerate(records) if record.get("key") == key), None)
+                    if existing is None:
+                        records.append(item)
+                    else:
+                        records[existing] = item
+                save_records(records_file, records)
+                self.send_json({"status": "ok", records_key: records})
+
             elif path == "/api/players":
                 payload = json.loads(post_data.decode("utf-8")) if post_data else {}
                 players = load_roster()
@@ -636,6 +681,11 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
 
         data = {
             "teams": teams,
+            "seasons": load_records(SEASONS_FILE),
+            "competitions": [
+                {**item, "logo_url": f"/assets/logos/{item['logo_filename']}" if item.get("logo_filename") else None}
+                for item in load_records(COMPETITIONS_FILE)
+            ],
             "players": players_list,
             "emotions": emotions,
             "backgrounds": backgrounds,

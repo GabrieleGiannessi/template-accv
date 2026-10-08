@@ -787,6 +787,44 @@ function App() {
 }
 
 // --- TAB 1: Match Result Form ---
+function CompetitionSeasonSelector({ data, onChange, config }) {
+  const competitions = config.competitions || [];
+  const competition = competitions.find(item => item.key === data.competition_key) || competitions[0];
+  const seasonLinks = competition?.seasons || [];
+  const seasons = seasonLinks.map(link => config.seasons?.find(item => item.key === link.season_key)).filter(Boolean);
+  const season = seasons.find(item => item.key === data.season_key) || seasons[0];
+  const association = seasonLinks.find(link => link.season_key === season?.key);
+  const teams = (association?.team_keys || []).map(key => config.teams.find(team => team.key === key)).filter(Boolean);
+
+  const applySelection = (nextCompetition, nextSeason) => {
+    const link = nextCompetition?.seasons?.find(item => item.season_key === nextSeason?.key);
+    const eligibleTeams = (link?.team_keys || []).map(key => config.teams.find(team => team.key === key)).filter(Boolean);
+    const pickTeam = (current, excluded) => eligibleTeams.find(team => team.name === current && team.name !== excluded) || eligibleTeams.find(team => team.name !== excluded);
+    const home = pickTeam(data.home_team?.name, null);
+    const away = pickTeam(data.away_team?.name, home?.name);
+    onChange({
+      ...data,
+      competition_key: nextCompetition?.key || "",
+      season_key: nextSeason?.key || "",
+      tournament: nextCompetition?.description || "",
+      home_team: home ? { ...data.home_team, name: home.name, short_name: home.short_name, logo_path: `assets/logos/${home.filename || home.logo_filename}` } : data.home_team,
+      away_team: away ? { ...data.away_team, name: away.name, short_name: away.short_name, logo_path: `assets/logos/${away.filename || away.logo_filename}` } : data.away_team
+    });
+  };
+
+  useEffect(() => {
+    if (competition && (data.competition_key !== competition.key || data.season_key !== season?.key)) {
+      applySelection(competition, season);
+    }
+  }, [config.competitions, config.seasons]);
+
+  return <div className="clean-card p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div><label className="text-[11px] font-bold text-slate-600 uppercase">Competizione</label><select value={competition?.key || ""} onChange={e => { const next = competitions.find(item => item.key === e.target.value); const nextSeason = next?.seasons?.map(link => config.seasons?.find(item => item.key === link.season_key)).find(Boolean); applySelection(next, nextSeason); }} disabled={!competitions.length} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"><option value="">{competitions.length ? "Seleziona competizione" : "Nessuna competizione configurata"}</option>{competitions.map(item => <option key={item.key} value={item.key}>{item.description}</option>)}</select></div>
+    <div><label className="text-[11px] font-bold text-slate-600 uppercase">Stagione</label><select value={season?.key || ""} onChange={e => applySelection(competition, seasons.find(item => item.key === e.target.value))} disabled={!seasons.length} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"><option value="">{seasons.length ? "Seleziona stagione" : "Nessuna stagione associata"}</option>{seasons.map(item => <option key={item.key} value={item.key}>{item.description}</option>)}</select></div>
+    {!teams.length && <p className="md:col-span-2 text-xs text-amber-700">La stagione selezionata non ha squadre associate a questa competizione.</p>}
+  </div>;
+}
+
 function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
   const updateField = (field, val) => onChange({ ...data, [field]: val });
   const homeIsAccv = data.home_team.name.toUpperCase().includes("ACCV");
@@ -820,8 +858,15 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
     onChange({ ...data, [listKey]: list });
   };
 
+  const selectedTeams = (() => {
+    const competition = (config.competitions || []).find(item => item.key === data.competition_key) || (config.competitions || [])[0];
+    const seasonLink = competition?.seasons?.find(link => link.season_key === data.season_key) || competition?.seasons?.[0];
+    return (seasonLink?.team_keys || []).map(key => config.teams.find(team => team.key === key)).filter(Boolean);
+  })();
+
   return (
     <div className="space-y-5">
+      <CompetitionSeasonSelector data={data} onChange={onChange} config={config} />
       {/* 1. Score & Teams Hero Card */}
       <div className="clean-card p-5 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -861,7 +906,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               }}
               className="clean-input w-full text-xs font-bold rounded-lg p-2 text-center truncate"
             >
-              {config.teams.filter((t) => t.name !== data.away_team.name).map((t) => (
+              {selectedTeams.filter((t) => t.name !== data.away_team.name).map((t) => (
                 <option key={t.key} value={t.name}>{t.name}</option>
               ))}
             </select>
@@ -911,7 +956,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               }}
               className="clean-input w-full text-xs font-bold rounded-lg p-2 text-center truncate"
             >
-              {config.teams.filter((t) => t.name !== data.home_team.name).map((t) => (
+              {selectedTeams.filter((t) => t.name !== data.home_team.name).map((t) => (
                 <option key={t.key} value={t.name}>{t.name}</option>
               ))}
             </select>
@@ -1033,15 +1078,6 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
       {/* 3. Dettagli Evento & MVP */}
       <div className="clean-card p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="text-[11px] font-bold text-slate-600 uppercase">Competizione</label>
-          <input
-            type="text"
-            value={data.tournament}
-            onChange={(e) => updateField("tournament", e.target.value)}
-            className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium"
-          />
-        </div>
-        <div>
           <label className="text-[11px] font-bold text-slate-600 uppercase">Giornata</label>
           <input
             type="text"
@@ -1107,9 +1143,15 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
 // --- TAB 2: Next Match Form ---
 function NextMatchForm({ data, onChange, config, onSwap, showToast }) {
   const updateField = (field, val) => onChange({ ...data, [field]: val });
+  const selectedTeams = (() => {
+    const competition = (config.competitions || []).find(item => item.key === data.competition_key) || (config.competitions || [])[0];
+    const seasonLink = competition?.seasons?.find(link => link.season_key === data.season_key) || competition?.seasons?.[0];
+    return (seasonLink?.team_keys || []).map(key => config.teams.find(team => team.key === key)).filter(Boolean);
+  })();
 
   return (
     <div className="clean-card p-5 space-y-5">
+      <CompetitionSeasonSelector data={data} onChange={onChange} config={config} />
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <span className="text-accvGreen font-bold text-xs uppercase tracking-wider flex items-center space-x-1.5">
           <Icon name="calendar" className="w-4 h-4 text-accvGreen" />
@@ -1132,7 +1174,7 @@ function NextMatchForm({ data, onChange, config, onSwap, showToast }) {
           <select
             value={data.home_team.name}
             onChange={(e) => {
-              const team = config.teams.find((t) => t.name === e.target.value);
+              const team = selectedTeams.find((t) => t.name === e.target.value);
               updateField("home_team", {
                 name: e.target.value,
                 short_name: team ? team.short_name : "HOM",
@@ -1141,7 +1183,7 @@ function NextMatchForm({ data, onChange, config, onSwap, showToast }) {
             }}
             className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"
           >
-            {config.teams.map((t) => (
+            {selectedTeams.filter(t => t.name !== data.away_team.name).map((t) => (
               <option key={t.key} value={t.name}>{t.name}</option>
             ))}
           </select>
@@ -1152,7 +1194,7 @@ function NextMatchForm({ data, onChange, config, onSwap, showToast }) {
           <select
             value={data.away_team.name}
             onChange={(e) => {
-              const team = config.teams.find((t) => t.name === e.target.value);
+              const team = selectedTeams.find((t) => t.name === e.target.value);
               updateField("away_team", {
                 name: e.target.value,
                 short_name: team ? team.short_name : "OPP",
@@ -1161,7 +1203,7 @@ function NextMatchForm({ data, onChange, config, onSwap, showToast }) {
             }}
             className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"
           >
-            {config.teams.map((t) => (
+            {selectedTeams.filter(t => t.name !== data.home_team.name).map((t) => (
               <option key={t.key} value={t.name}>{t.name}</option>
             ))}
           </select>
@@ -1170,15 +1212,6 @@ function NextMatchForm({ data, onChange, config, onSwap, showToast }) {
 
       {/* Event Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-[11px] font-bold text-slate-600 uppercase">Competizione</label>
-          <input
-            type="text"
-            value={data.tournament}
-            onChange={(e) => updateField("tournament", e.target.value)}
-            className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium"
-          />
-        </div>
         <div>
           <label className="text-[11px] font-bold text-slate-600 uppercase">Titolo / Matchday</label>
           <input
@@ -1438,6 +1471,8 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
   // Modals state for Team CRUD
   const [editingTeam, setEditingTeam] = useState(null); // null or team obj
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [editingSeason, setEditingSeason] = useState(null);
+  const [editingCompetition, setEditingCompetition] = useState(null);
 
   // --- PLAYERS CRUD ---
   const handleSavePlayer = (e) => {
@@ -1632,6 +1667,25 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
     setIsTeamModalOpen(true);
   };
 
+  const saveRecord = async (kind, record) => {
+    const response = await fetch(`/api/${kind}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(record) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Salvataggio non riuscito");
+    setEditingSeason(null); setEditingCompetition(null); onConfigReload(); showToast("✓ Dati salvati con successo!");
+  };
+  const deleteRecord = async (kind, record, label) => {
+    if (!confirm(`Eliminare ${label} “${record.description}”?`)) return;
+    const response = await fetch(`/api/${kind}/delete`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: record.key }) });
+    if (!response.ok) { alert("Errore durante l'eliminazione."); return; }
+    onConfigReload(); showToast(`✓ ${label} eliminata.`);
+  };
+  const uploadCompetitionLogo = (file, key) => new Promise((resolve, reject) => {
+    if (!file) return resolve("");
+    const reader = new FileReader();
+    reader.onload = () => fetch("/api/upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ upload_type: "logo", filename: `competition_${key}${file.name.substring(file.name.lastIndexOf(".")) || ".png"}`, data: reader.result }) }).then(r => r.json()).then(data => resolve(data.filename)).catch(reject);
+    reader.onerror = reject; reader.readAsDataURL(file);
+  });
+
   const handleEditPlayer = useCallback((player) => {
     setEditingPlayer({ ...player, isEditing: true });
     setIsPlayerModalOpen(true);
@@ -1644,8 +1698,10 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
           <Icon name="shield" className="w-4 h-4" /> Mia Squadra ({config.players?.length || 0})
         </button>
         <button onClick={() => setManagerTab("teams")} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold ${managerTab === "teams" ? "bg-accvGreen text-white" : "text-slate-600 hover:bg-slate-100"}`}>
-          <Icon name="users" className="w-4 h-4" /> Squadre Campionato ({filteredTeams.length})
+          <Icon name="users" className="w-4 h-4" /> Squadre ({filteredTeams.length})
         </button>
+        <button onClick={() => setManagerTab("seasons")} className={`px-4 py-2 rounded-xl text-xs font-bold ${managerTab === "seasons" ? "bg-accvGreen text-white" : "text-slate-600 hover:bg-slate-100"}`}>Stagioni ({config.seasons?.length || 0})</button>
+        <button onClick={() => setManagerTab("competitions")} className={`px-4 py-2 rounded-xl text-xs font-bold ${managerTab === "competitions" ? "bg-accvGreen text-white" : "text-slate-600 hover:bg-slate-100"}`}>Competizioni ({config.competitions?.length || 0})</button>
       </div>
 
       {managerTab === "my-team" && accvTeam && (
@@ -1679,7 +1735,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
         </section>
       )}
 
-      <section className="clean-card p-4 lg:p-5 space-y-3 flex flex-col">
+      {(managerTab === "my-team" || managerTab === "teams") && <section className="clean-card p-4 lg:p-5 space-y-3 flex flex-col">
         <div className="order-2 flex flex-col lg:flex-row lg:items-center gap-3 border-t border-slate-100 pt-3">
           <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="clean-input w-full lg:flex-1 px-4 py-2.5 text-xs rounded-xl font-medium" />
           {managerTab === "teams" && (
@@ -1694,7 +1750,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
         </div>
         <div className="order-1 flex flex-col items-start gap-3">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">{managerTab === "my-team" ? "Giocatori della rosa" : "Squadre del campionato"}</h2>
+            <h2 className="text-sm font-bold text-slate-900">{managerTab === "my-team" ? "Giocatori della rosa" : "Squadre"}</h2>
             <p className="text-[11px] text-slate-500">{managerTab === "my-team" ? `${filteredPlayers.length} elementi` : `${filteredTeams.length} squadre`}</p>
           </div>
           {managerTab === "my-team" ? (
@@ -1707,7 +1763,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
             </button>
           )}
         </div>
-      </section>
+      </section>}
 
       {managerTab === "my-team" && (
         <div className="clean-card overflow-x-auto">
@@ -1748,6 +1804,37 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
           })}
         </div>
       )}
+
+      {managerTab === "seasons" && (
+        <section className="clean-card p-5 space-y-4">
+          <div className="flex items-center justify-between"><div><h2 className="text-sm font-bold text-slate-900">Stagioni</h2><p className="text-[11px] text-slate-500">{config.seasons?.length || 0} stagioni configurate</p></div><button onClick={() => setEditingSeason({ key: "", description: "", notes: "", isEditing: false })} className="flex items-center gap-2 px-4 py-2 bg-accvGreen text-white text-xs font-bold rounded-xl"><Icon name="plus" className="w-4 h-4"/> Nuova Stagione</button></div>
+          {(config.seasons || []).length === 0 ? <p className="py-8 text-center text-sm text-slate-400">Nessuna stagione inserita.</p> : <div className="divide-y divide-slate-100">{config.seasons.map(s => <div key={s.key} className="flex items-center justify-between py-3"><div><div className="font-bold text-sm text-slate-800">{s.description}</div>{s.notes && <p className="text-xs text-slate-500 mt-1">{s.notes}</p>}</div><div className="flex gap-2"><button onClick={() => setEditingSeason({ ...s, isEditing: true })} className="p-2 text-slate-500 hover:text-accvGreen" title="Modifica"><Icon name="edit" className="w-4 h-4"/></button><button onClick={() => deleteRecord("seasons", s, "stagione")} className="p-2 text-slate-400 hover:text-accvRed" title="Elimina"><Icon name="trash" className="w-4 h-4"/></button></div></div>)}</div>}
+        </section>
+      )}
+
+      {managerTab === "competitions" && (
+        <section className="clean-card p-5 space-y-4">
+          <div className="flex items-center justify-between"><div><h2 className="text-sm font-bold text-slate-900">Competizioni</h2><p className="text-[11px] text-slate-500">{config.competitions?.length || 0} competizioni configurate</p></div><button onClick={() => setEditingCompetition({ key: "", description: "", notes: "", logo_filename: "", seasons: [], isEditing: false })} className="flex items-center gap-2 px-4 py-2 bg-accvGreen text-white text-xs font-bold rounded-xl"><Icon name="plus" className="w-4 h-4"/> Nuova Competizione</button></div>
+          {(config.competitions || []).length === 0 ? <p className="py-8 text-center text-sm text-slate-400">Nessuna competizione inserita.</p> : <div className="grid gap-3">{config.competitions.map(c => <div key={c.key} className="flex items-center gap-4 border border-slate-100 rounded-xl p-3"><div className="w-14 h-14 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">{c.logo_url ? <img src={c.logo_url} alt="" className="w-full h-full object-contain"/> : <Icon name="trophy" className="w-6 h-6 text-slate-300"/>}</div><div className="flex-1"><div className="font-bold text-sm">{c.description}</div><div className="text-xs text-slate-500">{(c.seasons || []).length} stagioni associate</div></div><button onClick={() => setEditingCompetition({ ...c, isEditing: true })} className="p-2 text-slate-500 hover:text-accvGreen" title="Modifica"><Icon name="edit" className="w-4 h-4"/></button><button onClick={() => deleteRecord("competitions", c, "competizione")} className="p-2 text-slate-400 hover:text-accvRed" title="Elimina"><Icon name="trash" className="w-4 h-4"/></button></div>)}</div>}
+        </section>
+      )}
+
+      {(editingSeason || editingCompetition) && (() => {
+        const isSeason = Boolean(editingSeason); const record = editingSeason || editingCompetition; const setRecord = isSeason ? setEditingSeason : setEditingCompetition; const kind = isSeason ? "stagione" : "competizione";
+        const updateSeasonAssociation = (seasonKey, update) => setRecord(prev => ({ ...prev, seasons: (prev.seasons || []).map(s => s.season_key === seasonKey ? { ...s, ...update } : s) }));
+        return <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4"><div className={`clean-card w-full ${isSeason ? "max-w-md" : "max-w-3xl"} max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-xl`}>
+          <div className="flex justify-between border-b border-slate-100 pb-3"><h3 className="font-bold text-slate-900">{record.isEditing ? "Modifica" : "Nuova"} {kind}</h3><button onClick={() => setRecord(null)} className="text-slate-400">✕</button></div>
+          <form onSubmit={async e => { e.preventDefault(); try { let data = { key: record.key, description: record.description, notes: record.notes || "" }; if (!isSeason) { data.seasons = record.seasons || []; data.logo_filename = record.logo_filename || ""; const file = e.currentTarget.elements.logo.files?.[0]; if (file) data.logo_filename = await uploadCompetitionLogo(file, record.key); } await saveRecord(isSeason ? "seasons" : "competitions", data); } catch (err) { alert(`Errore salvataggio: ${err.message}`); } }} className="space-y-4">
+            {!record.isEditing && <label className="block text-[11px] font-bold text-slate-600 uppercase">Codice<input required value={record.key} onChange={e => setRecord({ ...record, key: e.target.value.toLowerCase().replace(/[^a-z0-9_-]+/g, "_") })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-mono"/></label>}
+            <label className="block text-[11px] font-bold text-slate-600 uppercase">Descrizione<input required value={record.description} onChange={e => setRecord({ ...record, description: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg"/></label>
+            <label className="block text-[11px] font-bold text-slate-600 uppercase">Note (facoltative)<textarea rows="2" value={record.notes || ""} onChange={e => setRecord({ ...record, notes: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg"/></label>
+            {!isSeason && <><label className="block text-[11px] font-bold text-slate-600 uppercase">Logo{record.logo_url && <img src={record.logo_url} className="w-16 h-16 object-contain my-2"/>}<input name="logo" type="file" accept="image/*" className="block mt-2 text-xs"/></label>
+              <div><div className="text-[11px] font-bold text-slate-600 uppercase mb-2">Stagioni e squadre partecipanti</div>{(config.seasons || []).length === 0 ? <p className="text-xs text-slate-400">Inserisci prima una stagione per associarla.</p> : <div className="space-y-3">{config.seasons.map(season => { const association = (record.seasons || []).find(s => s.season_key === season.key); const teamKeys = association?.team_keys || []; return <div key={season.key} className="rounded-xl border border-slate-200 p-3"><label className="flex items-center gap-2 font-bold text-sm"><input type="checkbox" checked={Boolean(association)} onChange={e => setRecord(prev => ({ ...prev, seasons: e.target.checked ? [...(prev.seasons || []), { season_key: season.key, team_keys: [] }] : (prev.seasons || []).filter(s => s.season_key !== season.key) }))}/>{season.description}</label>{association && <div className="grid sm:grid-cols-2 gap-2 mt-3">{(config.teams || []).map(team => <label key={team.key} className="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" checked={teamKeys.includes(team.key)} onChange={e => updateSeasonAssociation(season.key, { team_keys: e.target.checked ? [...teamKeys, team.key] : teamKeys.filter(key => key !== team.key) })}/>{team.name}</label>)}</div>}</div>})}</div>}</div>
+            </>}
+            <div className="flex justify-end gap-2 border-t pt-3"><button type="button" onClick={() => setRecord(null)} className="px-4 py-2 bg-slate-100 text-xs font-bold rounded-xl">Annulla</button><button className="px-4 py-2 bg-accvGreen text-white text-xs font-bold rounded-xl">Salva</button></div>
+          </form>
+        </div></div>;
+      })()}
 
       {/* MODAL: PLAYER CREATE / EDIT */}
       {isPlayerModalOpen && editingPlayer && (
