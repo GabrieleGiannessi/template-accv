@@ -341,6 +341,7 @@ function App() {
   const [selectedFormat, setSelectedFormat] = useState("9:16");
   const [showSafeZone, setShowSafeZone] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const [hasLastResult, setHasLastResult] = useState(Boolean(localStorage.getItem("accv-last-result-v1")));
 
   // Form States: Match Result
   const [resultData, setResultData] = useState({
@@ -365,6 +366,9 @@ function App() {
     bg_zoom: 1,
     bg_x: 0.5,
     bg_y: 0.5,
+    graphic_variant: "balanced",
+    include_competition_info: false,
+    mix_team_colors: false,
     contrast_factor: 1.0,
     remove_contrast: false
   });
@@ -445,7 +449,7 @@ function App() {
             time: em.time || prev.time,
             location: em.location || prev.location,
             home_team: accvTeam ? { ...prev.home_team, ...accvTeam } : prev.home_team,
-            away_team: em.away_team || prev.away_team,
+                    away_team: em.away_team ? { ...em.away_team, ...(data.teams.find(team => team.name === em.away_team.name) ? { ...data.teams.find(team => team.name === em.away_team.name), ...em.away_team } : {}) } : prev.away_team,
             home_score: 0,
             away_score: 0,
             home_scorers: [],
@@ -539,6 +543,10 @@ function App() {
   // Action: Download Single PNG
   const handleDownload = () => {
     if (!previewUri) return;
+    if (activeTab === "result") {
+      localStorage.setItem("accv-last-result-v1", JSON.stringify(resultData));
+      setHasLastResult(true);
+    }
     fetch(previewUri)
       .then((res) => res.blob())
       .then((blob) => {
@@ -571,6 +579,10 @@ function App() {
     })
       .then((res) => res.blob())
       .then((blob) => {
+        if (activeTab === "result") {
+          localStorage.setItem("accv-last-result-v1", JSON.stringify(resultData));
+          setHasLastResult(true);
+        }
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -641,6 +653,12 @@ function App() {
       }));
     }
   };
+
+  const resultWarnings = [
+    !resultData.away_team?.name ? "Seleziona la squadra avversaria." : null,
+    !resultData.date ? "Inserisci la data della partita." : null,
+    ...["home", "away"].filter(team => (resultData[`${team}_scorers`] || []).length && (resultData[`${team}_scorers`] || []).reduce((total, scorer) => total + (Number(scorer.goals) || 0), 0) !== Number(resultData[`${team}_score`])).map(team => `I gol registrati per ${resultData[`${team}_team`].name} non coincidono con il punteggio.`)
+  ].filter(Boolean);
 
   if (loadingConfig) {
     return (
@@ -716,6 +734,8 @@ function App() {
         </nav>
       </header>
 
+      {activeTab === "result" && resultWarnings.length > 0 && <section role="status" aria-label="Avvisi sui dati della partita" className="mx-4 mt-4 lg:mx-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><strong>Controlla questi dati prima di scaricare:</strong><ul className="list-disc pl-5 mt-1">{resultWarnings.map(warning => <li key={warning}>{warning}</li>)}</ul></section>}
+
       {/* Main Studio Body: 2-Column Split Screen */}
       <main className={`flex-1 w-full mx-auto p-4 lg:p-6 ${activeTab === "roster" ? "max-w-none" : "max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6"}`}>
         
@@ -728,6 +748,13 @@ function App() {
               config={config}
               onSwap={handleSwapTeams}
               showToast={showToast}
+              hasLastResult={hasLastResult}
+              onRestoreLastResult={() => {
+                try {
+                  const saved = JSON.parse(localStorage.getItem("accv-last-result-v1"));
+                  if (saved) setResultData(prev => ({ ...prev, ...saved }));
+                } catch { showToast("Non riesco a recuperare l'ultimo risultato salvato."); }
+              }}
             />
           )}
 
@@ -848,8 +875,8 @@ function CompetitionSeasonSelector({ data, onChange, config, showMatchDetails = 
       competition_key: nextCompetition?.key || "",
       season_key: nextSeason?.key || "",
       tournament: nextCompetition?.description || "",
-      home_team: home ? { ...data.home_team, name: home.name, short_name: home.short_name, logo_path: `assets/logos/${home.filename || home.logo_filename}` } : data.home_team,
-      away_team: away ? { ...data.away_team, name: away.name, short_name: away.short_name, logo_path: `assets/logos/${away.filename || away.logo_filename}` } : data.away_team
+      home_team: home ? { ...data.home_team, name: home.name, short_name: home.short_name, logo_path: `assets/logos/${home.filename || home.logo_filename}`, primary_color: home.primary_color, secondary_color: home.secondary_color, tertiary_color: home.tertiary_color } : data.home_team,
+      away_team: away ? { ...data.away_team, name: away.name, short_name: away.short_name, logo_path: `assets/logos/${away.filename || away.logo_filename}`, primary_color: away.primary_color, secondary_color: away.secondary_color, tertiary_color: away.tertiary_color } : data.away_team
     });
   };
 
@@ -870,11 +897,12 @@ function CompetitionSeasonSelector({ data, onChange, config, showMatchDetails = 
       <div><label className="text-[11px] font-bold text-slate-600 uppercase">Data</label><input type="date" value={toDateFieldValue(data.date)} onChange={e => onChange({ ...data, date: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium" /></div>
       <div><label className="text-[11px] font-bold text-slate-600 uppercase">Ora</label><input type="time" value={data.time || ""} onChange={e => onChange({ ...data, time: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium" /></div>
     </div>}
+    {showMatchDetails && <label className="flex items-center gap-2 border-t border-slate-100 pt-3 text-xs font-semibold text-slate-700"><input type="checkbox" checked={Boolean(data.include_competition_info)} onChange={e => onChange({ ...data, include_competition_info: e.target.checked })} className="rounded border-slate-300 text-accvGreen focus:ring-accvGreen" /><span>Aggiungi informazioni</span></label>}
   </div>;
   return collapsible ? <CollapsibleSection title="Competizione attuale">{fields}</CollapsibleSection> : <div className="clean-card p-5">{fields}</div>;
 }
 
-function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
+function MatchResultForm({ data, onChange, config, onSwap, showToast, hasLastResult, onRestoreLastResult }) {
   const updateField = (field, val) => onChange({ ...data, [field]: val });
   const homeIsAccv = data.home_team.name.toUpperCase().includes("ACCV");
   const awayIsAccv = data.away_team.name.toUpperCase().includes("ACCV");
@@ -889,15 +917,15 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
     onChange({ ...data, [listKey]: nextList, [scoreKey]: Math.max(0, (Number(data[scoreKey]) || 0) + scoreDelta) });
   };
 
-  const addScorer = (teamType, playerName = "Giocatore", goals = 1) => {
+  const addScorer = (teamType, playerName = "Giocatore", goals = 1, ownGoal = false) => {
     const listKey = teamType === "home" ? "home_scorers" : "away_scorers";
     const current = data[listKey] || [];
-    const existing = current.find((s) => s.name === playerName);
+    const existing = current.find((s) => s.name === playerName && Boolean(s.own_goal) === ownGoal);
     if (existing) {
       const updated = current.map((s) => s.name === playerName ? { ...s, goals: s.goals + 1 } : s);
       updateScorers(listKey, updated, `${teamType}_score`, goals);
     } else {
-      updateScorers(listKey, [...current, { name: playerName, goals }], `${teamType}_score`, goals);
+      updateScorers(listKey, [...current, { name: playerName, goals, ...(ownGoal ? { own_goal: true } : {}) }], `${teamType}_score`, goals);
     }
   };
 
@@ -916,6 +944,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
     const key = `${teamType}_${color}_cards`;
     if (playerName?.trim()) onChange({ ...data, [key]: [...(data[key] || []), playerName.trim()] });
   };
+  const cardCount = (teamType, color, playerName) => (data[`${teamType}_${color}_cards`] || []).filter(name => name === playerName).length;
   const removeCard = (teamType, color, index) => {
     const key = `${teamType}_${color}_cards`;
     onChange({ ...data, [key]: (data[key] || []).filter((_, i) => i !== index) });
@@ -932,6 +961,11 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
   return (
     <div className="space-y-5">
       <CompetitionSeasonSelector data={data} onChange={onChange} config={config} showMatchDetails collapsible />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-xs font-bold text-slate-600">Riprendi dati di una partita recente</div>
+        <button type="button" disabled={!hasLastResult} onClick={onRestoreLastResult} className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40">Carica ultima partita scaricata</button>
+      </div>
+      <div className="clean-card p-4 space-y-2"><div className="text-[11px] font-bold uppercase text-slate-600">Composizione grafica</div><div className="grid grid-cols-3 gap-2">{[{ id: "balanced", label: "Equilibrata" }, { id: "score", label: "Punteggio in risalto" }, { id: "scorers", label: "Marcatori in risalto" }].map(option => <button key={option.id} type="button" onClick={() => updateField("graphic_variant", option.id)} className={`rounded-lg border px-2 py-2 text-[11px] font-bold ${data.graphic_variant === option.id ? "border-accvGreen bg-accvGreenLight text-accvGreenDark" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>{option.label}</button>)}</div></div>
       {/* 1. Score & Teams Hero Card */}
       <CollapsibleSection title="Tabellone Risultato" className="space-y-4">
         <div className="flex justify-end border-b border-slate-100 pb-3">
@@ -959,7 +993,10 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
                     ...data.home_team,
                     name: e.target.value,
                     short_name: team ? team.short_name : data.home_team.short_name,
-                    logo_path: team ? `assets/logos/${team.filename || team.logo_filename}` : null
+                    logo_path: team ? `assets/logos/${team.filename || team.logo_filename}` : null,
+                    primary_color: team?.primary_color || data.home_team.primary_color,
+                    secondary_color: team?.secondary_color || data.home_team.secondary_color,
+                    tertiary_color: team?.tertiary_color || data.home_team.tertiary_color
                   }
                 });
               }}
@@ -1009,7 +1046,10 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
                     ...data.away_team,
                     name: e.target.value,
                     short_name: team ? team.short_name : data.away_team.short_name,
-                    logo_path: team ? `assets/logos/${team.filename || team.logo_filename}` : null
+                    logo_path: team ? `assets/logos/${team.filename || team.logo_filename}` : null,
+                    primary_color: team?.primary_color || data.away_team.primary_color,
+                    secondary_color: team?.secondary_color || data.away_team.secondary_color,
+                    tertiary_color: team?.tertiary_color || data.away_team.tertiary_color
                   }
                 });
               }}
@@ -1072,18 +1112,14 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
           <div className="flex flex-wrap gap-2 pt-1">
             {accvScorers.map((s, idx) => (
               <div key={idx} className="flex items-center space-x-1.5 bg-accvGreenLight border border-accvGreen/30 px-3 py-1 rounded-lg text-xs font-bold text-accvGreenDark">
-                <span>{s.name}</span>
+                <span>{s.own_goal ? "Autogol" : s.name}</span>
                 <span>({s.goals})</span>
-                <button
-                  onClick={() => removeOrDecrementScorer(accvScorerType, idx)}
-                  type="button"
-                  className="text-accvRed hover:text-red-700 ml-1 font-bold"
-                >
-                  ✕
-                </button>
+                <button type="button" aria-label="Aggiungi gol" onClick={() => addScorer(accvScorerType, s.name, 1, Boolean(s.own_goal))} className="rounded bg-white/70 px-1.5 text-accvGreenDark">+</button>
+                <button type="button" aria-label="Rimuovi gol" onClick={() => removeOrDecrementScorer(accvScorerType, idx)} className="text-accvRed hover:text-red-700 font-bold">−</button>
               </div>
             ))}
           </div>
+          <button type="button" onClick={() => addScorer(accvScorerType, "Autogol", 1, true)} className="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-800 border border-red-200 text-xs font-bold">+ Autogol</button>
         </div>
 
         {/* Away Scorers Quick Input */}
@@ -1118,18 +1154,14 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
           <div className="flex flex-wrap gap-2 pt-1">
             {opponentScorers.map((s, idx) => (
               <div key={idx} className="flex items-center space-x-1.5 bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg text-xs font-bold text-slate-800">
-                <span>{s.name}</span>
+                <span>{s.own_goal ? "Autogol" : s.name}</span>
                 <span className="text-slate-500">({s.goals})</span>
-                <button
-                  onClick={() => removeOrDecrementScorer(opponentScorerType, idx)}
-                  type="button"
-                  className="text-accvRed hover:text-red-700 ml-1 font-bold"
-                >
-                  ✕
-                </button>
+                <button type="button" aria-label="Aggiungi gol" onClick={() => addScorer(opponentScorerType, s.name, 1, Boolean(s.own_goal))} className="rounded bg-white px-1.5 text-slate-800">+</button>
+                <button type="button" aria-label="Rimuovi gol" onClick={() => removeOrDecrementScorer(opponentScorerType, idx)} className="text-accvRed hover:text-red-700 font-bold">−</button>
               </div>
             ))}
           </div>
+          <button type="button" onClick={() => addScorer(opponentScorerType, "Autogol", 1, true)} className="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-800 border border-red-200 text-xs font-bold">+ Autogol</button>
         </div>
       </CollapsibleSection>
 
@@ -1147,7 +1179,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               return <div key={card.color} className="space-y-2">
                 <div className="text-[11px] font-bold text-slate-500 uppercase">Cartellini {card.label}</div>
                 {team.roster ? <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
-                  {config.players.filter((p) => !["Allenatore", "Dirigente"].includes(p.role)).map((p) => <button key={p.key} type="button" onClick={() => addCard(team.type, card.color, p.name)} className="px-2.5 py-1 text-[11px] rounded-lg bg-white hover:bg-slate-200 text-slate-700 font-semibold border border-slate-200">+{p.name}</button>)}
+                  {config.players.filter((p) => !["Allenatore", "Dirigente"].includes(p.role)).map((p) => { const count = cardCount(team.type, card.color, p.name); return <button key={p.key} type="button" onClick={() => addCard(team.type, card.color, p.name)} className={`px-2.5 py-1 text-[11px] rounded-lg font-semibold border ${count ? card.style : "bg-white hover:bg-slate-200 text-slate-700 border-slate-200"}`}>{count ? `✓ ${p.name} · ${count}` : `+${p.name}`}</button>; })}
                 </div> : <div className="flex gap-2">
                   <input id={`${team.type}-${card.color}-input`} type="text" className="clean-input flex-1 px-3 py-1.5 text-xs rounded-lg" placeholder="Cognome giocatore" onKeyDown={(e) => { if (e.key === "Enter") { addCard(team.type, card.color, e.target.value); e.target.value = ""; } }} />
                   <button type="button" onClick={() => { const input = document.getElementById(`${team.type}-${card.color}-input`); addCard(team.type, card.color, input?.value); if (input) input.value = ""; }} className="px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-lg">+ Aggiungi</button>
@@ -1183,6 +1215,12 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               className="rounded border-slate-300 text-accvGreen focus:ring-accvGreen"
             />
             <span>Effetto Flat (Riduci contrasto sfondo per far risaltare il testo)</span>
+          </label>
+        </div>
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center space-x-2 text-xs font-semibold cursor-pointer text-slate-700">
+            <input type="checkbox" checked={Boolean(data.mix_team_colors)} onChange={(e) => updateField("mix_team_colors", e.target.checked)} className="rounded border-slate-300 text-accvGreen focus:ring-accvGreen" />
+            <span>Mix-colori squadre</span>
           </label>
         </div>
       </CollapsibleSection>
@@ -2225,6 +2263,8 @@ function PreviewPanel({
         <label>Zoom {coverControls.zoom.toFixed(1)}×<input aria-label="Zoom copertina" type="range" min="1" max="2.5" step="0.1" value={coverControls.zoom} onChange={e => coverControls.onChange("bg_zoom", Number(e.target.value))} className="w-full accent-accvGreen" /></label>
         <label>Sposta orizzontalmente<input aria-label="Posizione orizzontale copertina" type="range" min="0" max="1" step="0.01" value={coverControls.x} onChange={e => coverControls.onChange("bg_x", Number(e.target.value))} className="w-full accent-accvGreen" /></label>
         <label>Sposta verticalmente<input aria-label="Posizione verticale copertina" type="range" min="0" max="1" step="0.01" value={coverControls.y} onChange={e => coverControls.onChange("bg_y", Number(e.target.value))} className="w-full accent-accvGreen" /></label>
+        <button type="button" onClick={() => { coverControls.onChange("bg_zoom", 1); coverControls.onChange("bg_x", 0.5); coverControls.onChange("bg_y", 0.5); }} className="col-span-3 justify-self-end rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] font-bold hover:bg-slate-50">Ripristina ritaglio</button>
+        {(coverControls.zoom >= 2.2 || coverControls.x <= 0.08 || coverControls.x >= 0.92 || coverControls.y <= 0.08 || coverControls.y >= 0.92) && <p className="col-span-3 rounded-lg bg-amber-50 px-3 py-2 text-amber-800">Ritaglio molto spostato o ingrandito: controlla che il soggetto principale resti visibile.</p>}
       </div>}
 
       {/* Action Buttons: Green Primary, Gold Secondary */}

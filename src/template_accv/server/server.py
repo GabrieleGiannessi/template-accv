@@ -143,6 +143,8 @@ def build_match_result_from_payload(payload: Dict[str, Any]) -> tuple[MatchResul
     # Teams
     ht_data = payload.get("home_team", {})
     at_data = payload.get("away_team", {})
+    competition_record = next((item for item in load_records(COMPETITIONS_FILE) if item.get("key") == payload.get("competition_key")), {})
+    season_record = next((item for item in load_records(SEASONS_FILE) if item.get("key") == payload.get("season_key")), {})
     
     ht_color = tuple(ht_data["primary_color"]) if ht_data.get("primary_color") else None
     at_color = tuple(at_data["primary_color"]) if at_data.get("primary_color") else None
@@ -151,23 +153,27 @@ def build_match_result_from_payload(payload: Dict[str, Any]) -> tuple[MatchResul
         name=ht_data.get("name", "A.C.C.V."),
         short_name=ht_data.get("short_name", "ACCV"),
         primary_color=ht_color,
+        secondary_color=tuple(ht_data["secondary_color"]) if ht_data.get("secondary_color") else None,
+        tertiary_color=tuple(ht_data["tertiary_color"]) if ht_data.get("tertiary_color") else None,
         logo_path=ht_data.get("logo_path")
     )
     away_team = Team(
         name=at_data.get("name", "Avversario"),
         short_name=at_data.get("short_name", "OPP"),
         primary_color=at_color,
+        secondary_color=tuple(at_data["secondary_color"]) if at_data.get("secondary_color") else None,
+        tertiary_color=tuple(at_data["tertiary_color"]) if at_data.get("tertiary_color") else None,
         logo_path=at_data.get("logo_path")
     )
     
     # Scorers
     home_scorers = [
-        Scorer(name=s.get("name", ""), goals=int(s.get("goals", 1)))
+        Scorer(name=s.get("name", ""), goals=int(s.get("goals", 1)), own_goal=bool(s.get("own_goal", False)))
         for s in payload.get("home_scorers", [])
         if s.get("name")
     ]
     away_scorers = [
-        Scorer(name=s.get("name", ""), goals=int(s.get("goals", 1)))
+        Scorer(name=s.get("name", ""), goals=int(s.get("goals", 1)), own_goal=bool(s.get("own_goal", False)))
         for s in payload.get("away_scorers", [])
         if s.get("name")
     ]
@@ -188,6 +194,10 @@ def build_match_result_from_payload(payload: Dict[str, Any]) -> tuple[MatchResul
         date=payload.get("date", ""),
         time=payload.get("time", ""),
         location=payload.get("location", ""),
+        competition_description=competition_record.get("description", ""),
+        season_description=season_record.get("description", ""),
+        competition_logo_path=f"assets/logos/{competition_record['logo_filename']}" if competition_record.get("logo_filename") else None,
+        include_competition_info=bool(payload.get("include_competition_info", False)),
         mvp_name=payload.get("mvp_name") or None
     )
     
@@ -202,6 +212,8 @@ def build_match_result_from_payload(payload: Dict[str, Any]) -> tuple[MatchResul
         bg_zoom=float(payload.get("bg_zoom", 1.0)),
         bg_x=float(payload.get("bg_x", 0.5)),
         bg_y=float(payload.get("bg_y", 0.5)),
+        graphic_variant=str(payload.get("graphic_variant", "balanced")),
+        mix_team_colors=bool(payload.get("mix_team_colors", False)),
     )
     return gen, fmt
 

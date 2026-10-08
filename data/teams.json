@@ -43,13 +43,26 @@
   },
   "jagerbombers": {
     "name": "Jagerbombers",
+    "extended_name": "",
     "short_name": "JAG",
     "primary_color": [
       16,
       185,
       129
     ],
-    "logo_filename": "jagerbombers.png"
+    "secondary_color": [
+      214,
+      227,
+      22
+    ],
+    "tertiary_color": [
+      255,
+      255,
+      255
+    ],
+    "notes": "",
+    "logo_filename": "jagerbombers.png",
+    "rivalry": 3
   },
   "real_nozzano": {
     "name": "Real Nozzano",
@@ -84,14 +97,14 @@
       36
     ],
     "secondary_color": [
-      239,
-      68,
-      68
+      255,
+      255,
+      255
     ],
     "tertiary_color": [
-      59,
-      130,
-      246
+      13,
+      13,
+      13
     ],
     "notes": "",
     "logo_filename": "san_ginese.png",
@@ -107,14 +120,14 @@
       44
     ],
     "secondary_color": [
-      239,
-      68,
-      68
+      255,
+      255,
+      255
     ],
     "tertiary_color": [
-      59,
-      130,
-      246
+      0,
+      0,
+      0
     ],
     "notes": "",
     "logo_filename": "totutti.png",
@@ -199,14 +212,14 @@
       0
     ],
     "secondary_color": [
-      239,
-      68,
-      68
+      255,
+      255,
+      255
     ],
     "tertiary_color": [
-      59,
-      130,
-      246
+      0,
+      0,
+      0
     ],
     "notes": "",
     "logo_filename": "seven_samba.png",
@@ -250,9 +263,9 @@
       68
     ],
     "tertiary_color": [
-      59,
-      130,
-      246
+      187,
+      190,
+      195
     ],
     "notes": "",
     "logo_filename": "lucca7kicks.png",
@@ -268,14 +281,14 @@
       232
     ],
     "secondary_color": [
-      239,
-      68,
-      68
+      0,
+      0,
+      0
     ],
     "tertiary_color": [
-      59,
-      130,
-      246
+      240,
+      102,
+      221
     ],
     "notes": "",
     "logo_filename": "las_furias_rosadas.png",

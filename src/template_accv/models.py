@@ -12,6 +12,8 @@ class Team:
     short_name: str
     logo_path: Optional[str] = None
     primary_color: Optional[tuple] = None
+    secondary_color: Optional[tuple] = None
+    tertiary_color: Optional[tuple] = None
 
 
 @dataclass
@@ -19,6 +21,7 @@ class Scorer:
     name: str
     goals: int = 1
     minutes: Optional[List[int]] = field(default_factory=list)
+    own_goal: bool = False
 
     def to_summary(self) -> str:
         """Returns string like 'Rossi (2)' or 'Bianchi'."""
@@ -40,6 +43,10 @@ class MatchResult:
     date: str = ""
     time: str = ""
     location: str = ""
+    competition_description: str = ""
+    season_description: str = ""
+    competition_logo_path: Optional[str] = None
+    include_competition_info: bool = False
     mvp_name: Optional[str] = None
     home_yellow_cards: List[str] = field(default_factory=list)
     away_yellow_cards: List[str] = field(default_factory=list)
