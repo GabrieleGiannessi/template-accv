@@ -1,5 +1,7 @@
 # ACCV - Calcetto Social Graphics Automation ⚽
 
+> **Storico delle modifiche:** il registro interno dei lavori svolti e delle funzionalità aggiunte è in [CHANGELOG_LAVORI.md](CHANGELOG_LAVORI.md). Aggiornare quel file al termine di ogni intervento sul progetto, aggiungendo una nuova voce datata.
+
 Automazione per la creazione automatizzata di template grafici social per i risultati delle partite e gli eventi della squadra di calcetto **A.C.C.V.**. Supporta tutti i formati social media (**9:16**, **4:3**, **16:9**, **1:1**, **4:5**), la gestione intelligente degli sfondi basata su categorie emotive, la ricerca automatica dei loghi delle squadre del campionato e l'input diretto da riga di comando.
 
 ---
@@ -76,7 +78,7 @@ python3 main.py serve
 - **Instagram Safe Zone Guide**: Overlay interattivo per verificare che testi e loghi non siano coperti dall'interfaccia delle storie.
 - **Export Multiplo & Condivisione**: Download immediato PNG, pacchetto ZIP con tutti i formati, copia negli appunti e condivisione social diretta su smartphone via Web Share API.
 - **Studio Figurine Panini**: Visualizzazione della rosa, anteprima delle figurine e download batch.
-- **Gestore Rosa & Campionato**: Operazioni CRUD per aggiungere/modificare/eliminare giocatori e squadre del campionato.
+- **Gestione**: Operazioni CRUD per giocatori, squadre, stagioni e competizioni; le competizioni supportano logo e associazioni di squadre per stagione. Nei form Risultato e Prossima Partita, competizione e stagione filtrano le squadre selezionabili.
 
 ### 🌍 Come Condividere la Demo Pubblicamente Online:
 
