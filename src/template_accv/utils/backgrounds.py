@@ -83,7 +83,10 @@ def load_and_process_background(
     emotion: Optional[str] = None,
     contrast_factor: float = 1.0,
     remove_contrast: bool = False,
-    dark_overlay_alpha: int = 150
+    dark_overlay_alpha: int = 150,
+    bg_zoom: float = 1.0,
+    bg_x: float = 0.5,
+    bg_y: float = 0.5,
 ) -> Image.Image:
     """
     Load background image based on user rules, crop/scale to target_size,
@@ -116,7 +119,19 @@ def load_and_process_background(
         try:
             img = Image.open(selected_path).convert("RGBA")
             # Fit and crop image precisely to target canvas dimensions
+            # Lift genuinely dark covers gently, preserving contrast and detail.
+            luminance = ImageOps.grayscale(img).resize((256, 256)).histogram()
+            mean_luma = sum(i * count for i, count in enumerate(luminance)) / (256 * 256)
+            if mean_luma < 82:
+                img = ImageEnhance.Brightness(img).enhance(min(1.22, 1.0 + (82 - mean_luma) / 420))
+            zoom = max(1.0, min(float(bg_zoom), 2.5))
             img = ImageOps.fit(img, target_size, method=Image.Resampling.LANCZOS)
+            if zoom > 1:
+                img = img.resize((int(target_size[0] * zoom), int(target_size[1] * zoom)), Image.Resampling.LANCZOS)
+            x_pos, y_pos = max(0, min(1, float(bg_x))), max(0, min(1, float(bg_y)))
+            left = int((img.width - target_size[0]) * x_pos)
+            top = int((img.height - target_size[1]) * y_pos)
+            img = img.crop((left, top, left + target_size[0], top + target_size[1]))
         except Exception as e:
             print(f"Warning: Failed to load background image {selected_path}: {e}")
             img = Image.new("RGBA", target_size, Colors.BG_DARK)

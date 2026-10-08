@@ -362,6 +362,9 @@ function App() {
     mvp_name: "Mario Rossi",
     emotion: "felicita",
     bg_path: null,
+    bg_zoom: 1,
+    bg_x: 0.5,
+    bg_y: 0.5,
     contrast_factor: 1.0,
     remove_contrast: false
   });
@@ -777,6 +780,7 @@ function App() {
                 activeTab={activeTab}
                 showSafeZone={showSafeZone}
                 onToggleSafeZone={() => setShowSafeZone(!showSafeZone)}
+                coverControls={activeTab === "result" ? { zoom: resultData.bg_zoom, x: resultData.bg_x, y: resultData.bg_y, onChange: (key, value) => setResultData(prev => ({ ...prev, [key]: value })) } : null}
                 onDownload={handleDownload}
                 onDownloadAll={handleDownloadAll}
                 onCopy={handleCopyToClipboard}
@@ -832,9 +836,13 @@ function CompetitionSeasonSelector({ data, onChange, config, showMatchDetails = 
   const applySelection = (nextCompetition, nextSeason) => {
     const link = nextCompetition?.seasons?.find(item => item.season_key === nextSeason?.key);
     const eligibleTeams = (link?.team_keys || []).map(key => config.teams.find(team => team.key === key)).filter(Boolean);
+    const accv = config.teams.find(team => team.key === "accv" || team.name.toUpperCase().includes("ACCV"));
+    if (accv && !eligibleTeams.some(team => team.key === accv.key)) eligibleTeams.unshift(accv);
     const pickTeam = (current, excluded) => eligibleTeams.find(team => team.name === current && team.name !== excluded) || eligibleTeams.find(team => team.name !== excluded);
-    const home = pickTeam(data.home_team?.name, null);
-    const away = pickTeam(data.away_team?.name, home?.name);
+    const homeWasAccv = data.home_team?.name?.toUpperCase().includes("ACCV");
+    const awayWasAccv = data.away_team?.name?.toUpperCase().includes("ACCV");
+    const home = homeWasAccv ? accv : pickTeam(data.home_team?.name, null);
+    const away = awayWasAccv ? accv : pickTeam(data.away_team?.name, home?.name);
     onChange({
       ...data,
       competition_key: nextCompetition?.key || "",
@@ -916,7 +924,9 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
   const selectedTeams = (() => {
     const competition = (config.competitions || []).find(item => item.key === data.competition_key) || (config.competitions || [])[0];
     const seasonLink = competition?.seasons?.find(link => link.season_key === data.season_key) || competition?.seasons?.[0];
-    return (seasonLink?.team_keys || []).map(key => config.teams.find(team => team.key === key)).filter(Boolean);
+    const eligible = (seasonLink?.team_keys || []).map(key => config.teams.find(team => team.key === key)).filter(Boolean);
+    const accv = config.teams.find(team => team.key === "accv" || team.name.toUpperCase().includes("ACCV"));
+    return accv && !eligible.some(team => team.key === accv.key) ? [accv, ...eligible] : eligible;
   })();
 
   return (
@@ -939,7 +949,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
         <div className="grid grid-cols-5 items-center gap-3 py-2">
           {/* Home Team */}
           <div className="col-span-2 text-center space-y-2">
-            <select
+            {data.home_team.name.toUpperCase().includes("ACCV") ? <div className="clean-input w-full text-xs font-bold rounded-lg p-2 text-center">{data.home_team.name}</div> : <select
               value={data.home_team.name}
               onChange={(e) => {
                 const team = config.teams.find((t) => t.name === e.target.value);
@@ -955,10 +965,10 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               }}
               className="clean-input w-full text-xs font-bold rounded-lg p-2 text-center truncate"
             >
-              {selectedTeams.filter((t) => t.name !== data.away_team.name).map((t) => (
+              {selectedTeams.filter((t) => !t.name.toUpperCase().includes("ACCV") && t.name !== data.away_team.name).map((t) => (
                 <option key={t.key} value={t.name}>{t.name}</option>
               ))}
-            </select>
+            </select>}
 
             <div className="flex items-center justify-center space-x-2">
               <button
@@ -979,7 +989,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
                 <Icon name="plus" className="w-4 h-4" />
               </button>
             </div>
-            <div className="text-[11px] text-slate-500 uppercase font-semibold">Squadra Casa</div>
+            <div className="text-[11px] text-slate-500 uppercase font-semibold">Casa</div>
           </div>
 
           {/* VS Divider */}
@@ -989,7 +999,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
 
           {/* Away Team */}
           <div className="col-span-2 text-center space-y-2">
-            <select
+            {data.away_team.name.toUpperCase().includes("ACCV") ? <div className="clean-input w-full text-xs font-bold rounded-lg p-2 text-center">{data.away_team.name}</div> : <select
               value={data.away_team.name}
               onChange={(e) => {
                 const team = config.teams.find((t) => t.name === e.target.value);
@@ -1005,10 +1015,10 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
               }}
               className="clean-input w-full text-xs font-bold rounded-lg p-2 text-center truncate"
             >
-              {selectedTeams.filter((t) => t.name !== data.home_team.name).map((t) => (
+              {selectedTeams.filter((t) => !t.name.toUpperCase().includes("ACCV") && t.name !== data.home_team.name).map((t) => (
                 <option key={t.key} value={t.name}>{t.name}</option>
               ))}
-            </select>
+            </select>}
 
             <div className="flex items-center justify-center space-x-2">
               <button
@@ -2121,6 +2131,7 @@ function PreviewPanel({
   activeTab,
   showSafeZone,
   onToggleSafeZone,
+  coverControls,
   onDownload,
   onDownloadAll,
   onCopy,
@@ -2209,6 +2220,12 @@ function PreviewPanel({
           </div>
         )}
       </div>
+
+      {coverControls && <div className="grid grid-cols-3 gap-3 text-[11px] font-semibold text-slate-600">
+        <label>Zoom {coverControls.zoom.toFixed(1)}×<input aria-label="Zoom copertina" type="range" min="1" max="2.5" step="0.1" value={coverControls.zoom} onChange={e => coverControls.onChange("bg_zoom", Number(e.target.value))} className="w-full accent-accvGreen" /></label>
+        <label>Sposta orizzontalmente<input aria-label="Posizione orizzontale copertina" type="range" min="0" max="1" step="0.01" value={coverControls.x} onChange={e => coverControls.onChange("bg_x", Number(e.target.value))} className="w-full accent-accvGreen" /></label>
+        <label>Sposta verticalmente<input aria-label="Posizione verticale copertina" type="range" min="0" max="1" step="0.01" value={coverControls.y} onChange={e => coverControls.onChange("bg_y", Number(e.target.value))} className="w-full accent-accvGreen" /></label>
+      </div>}
 
       {/* Action Buttons: Green Primary, Gold Secondary */}
       <div className="space-y-2 pt-1">

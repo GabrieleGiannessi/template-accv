@@ -25,7 +25,10 @@ class BaseGraphicGenerator:
         emotion: Optional[str] = None,
         contrast_factor: float = 1.0,
         remove_contrast: bool = False,
-        dark_overlay_alpha: int = 150
+        dark_overlay_alpha: int = 150,
+        bg_zoom: float = 1.0,
+        bg_x: float = 0.5,
+        bg_y: float = 0.5,
     ):
         self.aspect_ratio = aspect_ratio
         self.width, self.height = DIMENSIONS.get(aspect_ratio, DIMENSIONS[AspectRatio.RATIO_9_16])
@@ -37,7 +40,10 @@ class BaseGraphicGenerator:
             emotion=emotion,
             contrast_factor=contrast_factor,
             remove_contrast=remove_contrast,
-            dark_overlay_alpha=dark_overlay_alpha
+            dark_overlay_alpha=dark_overlay_alpha,
+            bg_zoom=bg_zoom,
+            bg_x=bg_x,
+            bg_y=bg_y,
         )
         self.draw = ImageDraw.Draw(self.image)
 

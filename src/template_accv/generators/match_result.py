@@ -35,6 +35,9 @@ class MatchResultGenerator(BaseGraphicGenerator):
         contrast_factor: float = 1.0,
         remove_contrast: bool = False,
         style: Optional[Union[GraphicStyle, str]] = None,
+        bg_zoom: float = 1.0,
+        bg_x: float = 0.5,
+        bg_y: float = 0.5,
     ):
         super().__init__(
             aspect_ratio=aspect_ratio,
@@ -42,7 +45,10 @@ class MatchResultGenerator(BaseGraphicGenerator):
             emotion=emotion,
             contrast_factor=contrast_factor,
             remove_contrast=remove_contrast,
-            dark_overlay_alpha=0  # Clean photo background with bottom gradient overlay
+            dark_overlay_alpha=0,  # Clean photo background with bottom gradient overlay
+            bg_zoom=bg_zoom,
+            bg_x=bg_x,
+            bg_y=bg_y,
         )
         self.data = match_result
 

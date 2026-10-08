@@ -198,7 +198,10 @@ def build_match_result_from_payload(payload: Dict[str, Any]) -> tuple[MatchResul
         bg_path=payload.get("bg_path"),
         emotion=payload.get("emotion") or None,
         contrast_factor=float(payload.get("contrast_factor", 1.0)),
-        remove_contrast=bool(payload.get("remove_contrast", False))
+        remove_contrast=bool(payload.get("remove_contrast", False)),
+        bg_zoom=float(payload.get("bg_zoom", 1.0)),
+        bg_x=float(payload.get("bg_x", 0.5)),
+        bg_y=float(payload.get("bg_y", 0.5)),
     )
     return gen, fmt
 
