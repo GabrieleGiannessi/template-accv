@@ -643,11 +643,18 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
         # 3. Emotions
         emotions = []
         if BACKGROUNDS_DIR.exists():
-            for p in sorted(BACKGROUNDS_DIR.iterdir()):
-                if p.is_dir() and p.name.startswith("tema "):
-                    emotions.append(p.name.replace("tema ", ""))
-                elif p.is_dir() and p.name == "foto squadra":
-                    emotions.append("foto squadra")
+            themes_dir = BACKGROUNDS_DIR / "temi"
+            if themes_dir.is_dir():
+                emotions.extend(p.name for p in sorted(themes_dir.iterdir()) if p.is_dir())
+            else:
+                emotions.extend(
+                    p.name.replace("tema ", "") for p in sorted(BACKGROUNDS_DIR.iterdir())
+                    if p.is_dir() and p.name.startswith("tema ")
+                )
+            if (BACKGROUNDS_DIR / "foto_di_gruppo").is_dir():
+                emotions.append("foto squadra")
+            elif (BACKGROUNDS_DIR / "foto squadra").is_dir():
+                emotions.append("foto squadra")
                     
         # 4. Background images
         backgrounds = []
@@ -655,11 +662,13 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
             for p in sorted(BACKGROUNDS_DIR.glob("**/*")):
                 if p.is_file() and p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp"]:
                     category = "Altro"
-                    if "tema " in p.parent.name:
+                    if p.parent.parent == BACKGROUNDS_DIR / "temi":
+                        category = p.parent.name.capitalize()
+                    elif p.parent.name.startswith("tema "):
                         category = p.parent.name.replace("tema ", "").capitalize()
-                    elif p.parent.name == "foto squadra":
+                    elif p.parent.name in {"foto_di_gruppo", "foto squadra"}:
                         category = "Foto Squadra"
-                    elif p.parent == BACKGROUNDS_DIR:
+                    elif p.parent in {BACKGROUNDS_DIR, BACKGROUNDS_DIR / "standard"}:
                         category = "Predefinito"
                     backgrounds.append({
                         "filename": p.name,

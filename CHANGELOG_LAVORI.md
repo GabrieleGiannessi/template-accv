@@ -4,6 +4,14 @@ Questo documento registra le modifiche funzionali e tecniche apportate al proget
 
 **Regola di manutenzione:** al termine di ogni lavoro sul progetto, aggiungere qui una nuova voce con la data, una sintesi delle modifiche e gli eventuali controlli effettuati. Il [README](README.md) rimanda a questo storico.
 
+## 2026-10-08 — Aggiornamento percorsi degli sfondi
+
+- Adeguata la selezione casuale agli sfondi standard in `assets/backgrounds/standard/` e alle categorie in `assets/backgrounds/temi/`.
+- Collegata la categoria “foto squadra” alla cartella `assets/backgrounds/foto_di_gruppo/`.
+- Aggiornata la galleria server per rilevare e classificare le nuove cartelle.
+- Aggiornata la documentazione dei percorsi.
+- Controllo effettuato: revisione delle modifiche; non sono stati eseguiti test automatici.
+
 ## 2026-10-08 — Gestione squadre, stagioni e competizioni
 
 - Rinominata in **Squadre** la sezione prima chiamata “Squadre Campionato”.

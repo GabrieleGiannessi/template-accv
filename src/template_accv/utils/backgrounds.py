@@ -8,6 +8,7 @@ and applying contrast filters.
 import math
 import os
 import random
+import unicodedata
 from pathlib import Path
 from typing import Optional, Tuple
 from PIL import Image, ImageEnhance, ImageOps
@@ -20,16 +21,25 @@ def find_emotion_directory(emotion_name: str) -> Optional[Path]:
     if not emotion_name or not BACKGROUNDS_DIR.exists():
         return None
 
-    clean_target = emotion_name.strip().lower()
-    
-    # Direct match or normalized match
-    for entry in BACKGROUNDS_DIR.iterdir():
-        if entry.is_dir():
-            dir_name = entry.name.lower()
-            if (clean_target in dir_name) or (dir_name in clean_target):
-                return entry
-            # Handling accented/normalized Italian emotion names e.g. felicita -> felicità
-            if clean_target.replace("a", "à") in dir_name or clean_target.replace("e", "è") in dir_name:
+    def normalize(value: str) -> str:
+        return "".join(
+            char for char in unicodedata.normalize("NFKD", value.strip().lower())
+            if not unicodedata.combining(char)
+        ).replace("_", " ").replace("-", " ")
+
+    clean_target = normalize(emotion_name)
+    if clean_target in {"foto squadra", "foto di gruppo", "gruppo"}:
+        group_dir = BACKGROUNDS_DIR / "foto_di_gruppo"
+        if group_dir.is_dir():
+            return group_dir
+
+    themes_dir = BACKGROUNDS_DIR / "temi"
+    search_roots = [themes_dir, BACKGROUNDS_DIR]
+    for root in search_roots:
+        if not root.is_dir():
+            continue
+        for entry in sorted(root.iterdir()):
+            if entry.is_dir() and normalize(entry.name.removeprefix("tema ")) == clean_target:
                 return entry
 
     return None
@@ -51,6 +61,11 @@ def get_default_background_path() -> Optional[Path]:
     Returns default background path from assets/backgrounds/.
     Defaults to std.JPG or any image inside assets/backgrounds/.
     """
+    standard_dir = BACKGROUNDS_DIR / "standard"
+    standard_image = get_random_image_from_dir(standard_dir)
+    if standard_image:
+        return standard_image
+
     std_path = BACKGROUNDS_DIR / "std.JPG"
     if std_path.exists():
         return std_path

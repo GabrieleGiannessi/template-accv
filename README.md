@@ -50,8 +50,8 @@ Il generatore supporta 5 diversi formati di output adattivi:
 
 ### Scelta dello Sfondo:
 1. **Input Immagine Specifica**: Con l'argomento `--bg-image` / `--bg` viene utilizzata l'immagine indicata.
-2. **Selezione per Emozione**: Con l'argomento `--emotion` / `-e` (es. `felicità`, `tristezza`, `polemica`, `normale`, `foto squadra`), lo script seleziona casualmente una foto presente nella relativa sottocartella in `assets/backgrounds/` (es. `assets/backgrounds/tema felicità/`).
-3. **Default Behaviour**: Se non viene specificata alcuna categoria (o se la cartella non esiste), lo script seleziona l'immagine di sfondo presente nella cartella `/backgrounds` (`assets/backgrounds/std.JPG`).
+2. **Selezione per Emozione**: Con l'argomento `--emotion` / `-e` (es. `felicità`, `tristezza`, `polemica`, `normale`, `foto squadra`), lo script seleziona casualmente una foto dalla cartella corrispondente in `assets/backgrounds/temi/` o `assets/backgrounds/foto_di_gruppo/`.
+3. **Default Behaviour**: Se non viene specificata alcuna categoria (o se la cartella non esiste), lo script seleziona casualmente un'immagine da `assets/backgrounds/standard/`.
 
 ## Filtri sul Contrasto:
 - `--contrast <valore>`: Imposta il fattore di contrasto per lo sfondo (es. `0.5` per sfondi più morbidi, `1.0` normale).
