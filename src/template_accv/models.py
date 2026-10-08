@@ -41,6 +41,10 @@ class MatchResult:
     time: str = ""
     location: str = ""
     mvp_name: Optional[str] = None
+    home_yellow_cards: List[str] = field(default_factory=list)
+    away_yellow_cards: List[str] = field(default_factory=list)
+    home_red_cards: List[str] = field(default_factory=list)
+    away_red_cards: List[str] = field(default_factory=list)
 
 
 @dataclass

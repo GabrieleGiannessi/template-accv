@@ -2,6 +2,8 @@
 
 > **Storico delle modifiche:** il registro interno dei lavori svolti e delle funzionalità aggiunte è in [CHANGELOG_LAVORI.md](CHANGELOG_LAVORI.md). Aggiornare quel file al termine di ogni intervento sul progetto, aggiungendo una nuova voce datata.
 
+> **Contesto del progetto:** obiettivi, pubblico, tono e decisioni di prodotto sono raccolti in [CONTESTO_PROGETTO.md](CONTESTO_PROGETTO.md) e verranno completati con le indicazioni dell'utente.
+
 Automazione per la creazione automatizzata di template grafici social per i risultati delle partite e gli eventi della squadra di calcetto **A.C.C.V.**. Supporta tutti i formati social media (**9:16**, **4:3**, **16:9**, **1:1**, **4:5**), la gestione intelligente degli sfondi basata su categorie emotive, la ricerca automatica dei loghi delle squadre del campionato e l'input diretto da riga di comando.
 
 ---

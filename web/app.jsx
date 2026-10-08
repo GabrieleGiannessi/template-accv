@@ -115,6 +115,7 @@ const PlayerRosterRow = React.memo(function PlayerRosterRow({ player, onEdit, on
         </label>
       </td>
       <td className="py-2 px-4 font-bold text-slate-900">{player.name}</td>
+      <td className="py-2 px-4 text-slate-600">{player.display_name || "—"}</td>
       <td className="py-2 px-4 text-slate-600">{player.role}</td>
       <td className="py-2 px-4 text-center font-bold text-accvGreenDark">#{player.number}</td>
       <td className="py-2 px-4 text-right space-x-1">
@@ -200,9 +201,12 @@ function BackgroundSelector({
       <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
         <button
           type="button"
-          onClick={() => setMode("emotion")}
+          onClick={() => {
+            setMode("emotion");
+            onClearCustomBg();
+          }}
           className={`flex-1 py-1.5 rounded-lg transition-all ${
-            mode === "emotion" && !bgPath
+            mode === "emotion"
               ? "bg-white text-accvGreenDark shadow-sm font-extrabold"
               : "text-slate-600 hover:text-slate-900"
           }`}
@@ -213,7 +217,7 @@ function BackgroundSelector({
           type="button"
           onClick={() => setMode("gallery")}
           className={`flex-1 py-1.5 rounded-lg transition-all ${
-            mode === "gallery" || (bgPath && mode !== "upload")
+            mode === "gallery"
               ? "bg-white text-accvGreenDark shadow-sm font-extrabold"
               : "text-slate-600 hover:text-slate-900"
           }`}
@@ -241,12 +245,9 @@ function BackgroundSelector({
               <button
                 key={em}
                 type="button"
-                onClick={() => {
-                  onClearCustomBg();
-                  onSelectEmotion(em);
-                }}
+                onClick={() => onSelectEmotion(em)}
                 className={`py-2 px-2 rounded-xl text-xs font-bold capitalize transition-all border ${
-                  emotion === em && !bgPath
+                  emotion === em
                     ? "bg-accvGreen text-white border-accvGreen shadow-green-glow"
                     : "bg-white text-slate-700 border-slate-200 hover:border-accvGreen hover:bg-slate-50"
                 }`}
@@ -336,6 +337,7 @@ function App() {
   // Preview State
   const [previewUri, setPreviewUri] = useState(null);
   const [rendering, setRendering] = useState(false);
+  const previewRequestId = useRef(0);
   const [selectedFormat, setSelectedFormat] = useState("9:16");
   const [showSafeZone, setShowSafeZone] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
@@ -353,6 +355,10 @@ function App() {
     away_score: 0,
     home_scorers: [],
     away_scorers: [],
+    home_yellow_cards: [],
+    away_yellow_cards: [],
+    home_red_cards: [],
+    away_red_cards: [],
     mvp_name: "Mario Rossi",
     emotion: "felicita",
     bg_path: null,
@@ -463,25 +469,25 @@ function App() {
     }));
   };
 
-  // Auto-suggest emotion on score change
+  // Auto-suggest emotion on score change while keeping the currently selected background.
   useEffect(() => {
-    if (activeTab === "result" && !resultData.bg_path) {
-      const isAccvHome = resultData.home_team.name.toUpperCase().includes("ACCV");
-      const isAccvAway = resultData.away_team.name.toUpperCase().includes("ACCV");
-      if (isAccvHome) {
-        if (resultData.home_score > resultData.away_score) setResultData((p) => ({ ...p, emotion: "felicita" }));
-        else if (resultData.home_score < resultData.away_score) setResultData((p) => ({ ...p, emotion: "tristezza" }));
-        else setResultData((p) => ({ ...p, emotion: "polemica" }));
-      } else if (isAccvAway) {
-        if (resultData.away_score > resultData.home_score) setResultData((p) => ({ ...p, emotion: "felicita" }));
-        else if (resultData.away_score < resultData.home_score) setResultData((p) => ({ ...p, emotion: "tristezza" }));
-        else setResultData((p) => ({ ...p, emotion: "polemica" }));
-      }
+    if (activeTab !== "result") return;
+    const isAccvHome = resultData.home_team.name.toUpperCase().includes("ACCV");
+    const isAccvAway = resultData.away_team.name.toUpperCase().includes("ACCV");
+    let emotion = null;
+    if (isAccvHome) {
+      emotion = resultData.home_score > resultData.away_score ? "felicita" : resultData.home_score < resultData.away_score ? "tristezza" : "polemica";
+    } else if (isAccvAway) {
+      emotion = resultData.away_score > resultData.home_score ? "felicita" : resultData.away_score < resultData.home_score ? "tristezza" : "polemica";
+    }
+    if (emotion && emotion !== resultData.emotion) {
+      setResultData((prev) => ({ ...prev, emotion }));
     }
   }, [resultData.home_score, resultData.away_score, activeTab]);
 
   // Request Render Preview (debounced in memory)
   useEffect(() => {
+    const requestId = ++previewRequestId.current;
     if (loadingConfig || activeTab === "roster") return;
 
     const timer = setTimeout(() => {
@@ -508,12 +514,17 @@ function App() {
       })
         .then((res) => res.json())
         .then((res) => {
+          if (requestId !== previewRequestId.current) return;
           if (res.status === "ok" && res.preview) {
             setPreviewUri(res.preview);
+            if (activeTab === "result" && res.bg_path) {
+              setResultData((prev) => prev.bg_path ? prev : { ...prev, bg_path: res.bg_path });
+            }
           }
           setRendering(false);
         })
         .catch((err) => {
+          if (requestId !== previewRequestId.current) return;
           console.error("Preview render failed:", err);
           setRendering(false);
         });
@@ -524,20 +535,8 @@ function App() {
 
   // Action: Download Single PNG
   const handleDownload = () => {
-    const payload = {
-      type: activeTab,
-      format: selectedFormat,
-      ...(activeTab === "result" ? resultData : {}),
-      ...(activeTab === "next" ? nextData : {}),
-      ...(activeTab === "mvp" ? mvpData : {}),
-      ...(activeTab === "figurina" ? figurinaData : {})
-    };
-
-    fetch("/api/download", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    })
+    if (!previewUri) return;
+    fetch(previewUri)
       .then((res) => res.blob())
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -547,6 +546,7 @@ function App() {
         document.body.appendChild(a);
         a.click();
         a.remove();
+        window.URL.revokeObjectURL(url);
         showToast("✓ Grafica scaricata in PNG!");
       })
       .catch((err) => alert("Errore download: " + err));
@@ -624,7 +624,11 @@ function App() {
         home_score: prev.away_score,
         away_score: prev.home_score,
         home_scorers: prev.away_scorers,
-        away_scorers: prev.home_scorers
+        away_scorers: prev.home_scorers,
+        home_yellow_cards: prev.away_yellow_cards || [],
+        away_yellow_cards: prev.home_yellow_cards || [],
+        home_red_cards: prev.away_red_cards || [],
+        away_red_cards: prev.home_red_cards || []
       }));
     } else if (activeTab === "next") {
       setNextData((prev) => ({
@@ -689,7 +693,7 @@ function App() {
                   setActiveTab(tab.id);
                   if (tab.id === "result") {
                     const accvTeam = config.teams?.find((team) => team.key === "accv" || team.name.toUpperCase().includes("ACCV"));
-                    setResultData((prev) => ({ ...prev, home_team: accvTeam || prev.home_team, away_team: prev.away_team.name.toUpperCase().includes("ACCV") ? (config.teams.find((team) => !team.name.toUpperCase().includes("ACCV")) || prev.away_team) : prev.away_team, home_score: 0, away_score: 0, home_scorers: [], away_scorers: [] }));
+                    setResultData((prev) => ({ ...prev, home_team: accvTeam || prev.home_team, away_team: prev.away_team.name.toUpperCase().includes("ACCV") ? (config.teams.find((team) => !team.name.toUpperCase().includes("ACCV")) || prev.away_team) : prev.away_team, home_score: 0, away_score: 0, home_scorers: [], away_scorers: [], home_yellow_cards: [], away_yellow_cards: [], home_red_cards: [], away_red_cards: [] }));
                   }
                   if (tab.id === "figurina" && selectedFormat !== "9:16") {
                     setSelectedFormat("9:16");
@@ -787,7 +791,36 @@ function App() {
 }
 
 // --- TAB 1: Match Result Form ---
-function CompetitionSeasonSelector({ data, onChange, config }) {
+function CollapsibleSection({ title, children, className = "" }) {
+  const [expanded, setExpanded] = useState(true);
+  return (
+    <section className="clean-card p-5">
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((current) => !current)}
+        className="w-full flex items-center justify-between text-left text-xs uppercase tracking-wider font-bold text-accvGreen"
+      >
+        <span>{title}</span>
+        <span className="text-slate-400 text-base" aria-hidden="true">{expanded ? "−" : "+"}</span>
+      </button>
+      {expanded && <div className={`mt-4 ${className}`}>{children}</div>}
+    </section>
+  );
+}
+
+function toDateFieldValue(value) {
+  const text = String(value || "").trim();
+  const iso = text.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (iso) return iso[1];
+  const match = text.match(/(?:[A-Za-zÀ-ÿ]+\s+)?(\d{1,2})\s+([A-Za-zÀ-ÿ]+)\s+(\d{4})/i);
+  if (!match) return "";
+  const months = { gennaio: "01", febbraio: "02", marzo: "03", aprile: "04", maggio: "05", giugno: "06", luglio: "07", agosto: "08", settembre: "09", ottobre: "10", novembre: "11", dicembre: "12" };
+  const month = months[match[2].toLowerCase()];
+  return month ? `${match[3]}-${month}-${match[1].padStart(2, "0")}` : "";
+}
+
+function CompetitionSeasonSelector({ data, onChange, config, showMatchDetails = false, collapsible = false }) {
   const competitions = config.competitions || [];
   const competition = competitions.find(item => item.key === data.competition_key) || competitions[0];
   const seasonLinks = competition?.seasons || [];
@@ -818,11 +851,19 @@ function CompetitionSeasonSelector({ data, onChange, config }) {
     }
   }, [config.competitions, config.seasons]);
 
-  return <div className="clean-card p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div><label className="text-[11px] font-bold text-slate-600 uppercase">Competizione</label><select value={competition?.key || ""} onChange={e => { const next = competitions.find(item => item.key === e.target.value); const nextSeason = next?.seasons?.map(link => config.seasons?.find(item => item.key === link.season_key)).find(Boolean); applySelection(next, nextSeason); }} disabled={!competitions.length} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"><option value="">{competitions.length ? "Seleziona competizione" : "Nessuna competizione configurata"}</option>{competitions.map(item => <option key={item.key} value={item.key}>{item.description}</option>)}</select></div>
-    <div><label className="text-[11px] font-bold text-slate-600 uppercase">Stagione</label><select value={season?.key || ""} onChange={e => applySelection(competition, seasons.find(item => item.key === e.target.value))} disabled={!seasons.length} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"><option value="">{seasons.length ? "Seleziona stagione" : "Nessuna stagione associata"}</option>{seasons.map(item => <option key={item.key} value={item.key}>{item.description}</option>)}</select></div>
-    {!teams.length && <p className="md:col-span-2 text-xs text-amber-700">La stagione selezionata non ha squadre associate a questa competizione.</p>}
+  const fields = <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label className="text-[11px] font-bold text-slate-600 uppercase">Competizione</label><select value={competition?.key || ""} onChange={e => { const next = competitions.find(item => item.key === e.target.value); const nextSeason = next?.seasons?.map(link => config.seasons?.find(item => item.key === link.season_key)).find(Boolean); applySelection(next, nextSeason); }} disabled={!competitions.length} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"><option value="">{competitions.length ? "Seleziona competizione" : "Nessuna competizione configurata"}</option>{competitions.map(item => <option key={item.key} value={item.key}>{item.description}</option>)}</select></div>
+      <div><label className="text-[11px] font-bold text-slate-600 uppercase">Stagione</label><select value={season?.key || ""} onChange={e => applySelection(competition, seasons.find(item => item.key === e.target.value))} disabled={!seasons.length} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"><option value="">{seasons.length ? "Seleziona stagione" : "Nessuna stagione associata"}</option>{seasons.map(item => <option key={item.key} value={item.key}>{item.description}</option>)}</select></div>
+      {!teams.length && <p className="md:col-span-2 text-xs text-amber-700">La stagione selezionata non ha squadre associate a questa competizione.</p>}
+    </div>
+    {showMatchDetails && <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+      <div><label className="text-[11px] font-bold text-slate-600 uppercase">Giornata</label><input type="text" value={data.matchday || ""} onChange={e => onChange({ ...data, matchday: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium" /></div>
+      <div><label className="text-[11px] font-bold text-slate-600 uppercase">Data</label><input type="date" value={toDateFieldValue(data.date)} onChange={e => onChange({ ...data, date: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium" /></div>
+      <div><label className="text-[11px] font-bold text-slate-600 uppercase">Ora</label><input type="time" value={data.time || ""} onChange={e => onChange({ ...data, time: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium" /></div>
+    </div>}
   </div>;
+  return collapsible ? <CollapsibleSection title="Competizione attuale">{fields}</CollapsibleSection> : <div className="clean-card p-5">{fields}</div>;
 }
 
 function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
@@ -832,30 +873,44 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
   const accvIsHome = homeIsAccv || !awayIsAccv;
   const accvScorerType = accvIsHome ? "home" : "away";
   const opponentScorerType = accvIsHome ? "away" : "home";
-  const accvScorers = data[accvIsHome ? "home_scorers" : "away_scorers"];
-  const opponentScorers = data[accvIsHome ? "away_scorers" : "home_scorers"];
+  const accvScorers = data[accvIsHome ? "home_scorers" : "away_scorers"] || [];
+  const opponentScorers = data[accvIsHome ? "away_scorers" : "home_scorers"] || [];
   const opponentTeam = accvIsHome ? data.away_team : data.home_team;
+
+  const updateScorers = (listKey, nextList, scoreKey, scoreDelta) => {
+    onChange({ ...data, [listKey]: nextList, [scoreKey]: Math.max(0, (Number(data[scoreKey]) || 0) + scoreDelta) });
+  };
 
   const addScorer = (teamType, playerName = "Giocatore", goals = 1) => {
     const listKey = teamType === "home" ? "home_scorers" : "away_scorers";
-    const existing = data[listKey].find((s) => s.name === playerName);
+    const current = data[listKey] || [];
+    const existing = current.find((s) => s.name === playerName);
     if (existing) {
-      const updated = data[listKey].map((s) => s.name === playerName ? { ...s, goals: s.goals + 1 } : s);
-      onChange({ ...data, [listKey]: updated });
+      const updated = current.map((s) => s.name === playerName ? { ...s, goals: s.goals + 1 } : s);
+      updateScorers(listKey, updated, `${teamType}_score`, goals);
     } else {
-      onChange({ ...data, [listKey]: [...data[listKey], { name: playerName, goals }] });
+      updateScorers(listKey, [...current, { name: playerName, goals }], `${teamType}_score`, goals);
     }
   };
 
   const removeOrDecrementScorer = (teamType, index) => {
     const listKey = teamType === "home" ? "home_scorers" : "away_scorers";
-    const list = [...data[listKey]];
+    const list = [...(data[listKey] || [])];
     if (list[index].goals > 1) {
       list[index].goals -= 1;
     } else {
       list.splice(index, 1);
     }
-    onChange({ ...data, [listKey]: list });
+    updateScorers(listKey, list, `${teamType}_score`, -1);
+  };
+
+  const addCard = (teamType, color, playerName) => {
+    const key = `${teamType}_${color}_cards`;
+    if (playerName?.trim()) onChange({ ...data, [key]: [...(data[key] || []), playerName.trim()] });
+  };
+  const removeCard = (teamType, color, index) => {
+    const key = `${teamType}_${color}_cards`;
+    onChange({ ...data, [key]: (data[key] || []).filter((_, i) => i !== index) });
   };
 
   const selectedTeams = (() => {
@@ -866,16 +921,10 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
 
   return (
     <div className="space-y-5">
-      <CompetitionSeasonSelector data={data} onChange={onChange} config={config} />
+      <CompetitionSeasonSelector data={data} onChange={onChange} config={config} showMatchDetails collapsible />
       {/* 1. Score & Teams Hero Card */}
-      <div className="clean-card p-5 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center space-x-2">
-            <span className="text-accvGreen font-bold text-xs uppercase tracking-wider flex items-center space-x-1.5">
-              <Icon name="trophy" className="w-4 h-4 text-accvGreen" />
-              <span>Tabellone Risultato</span>
-            </span>
-          </div>
+      <CollapsibleSection title="Tabellone Risultato" className="space-y-4">
+        <div className="flex justify-end border-b border-slate-100 pb-3">
           <button
             onClick={onSwap}
             type="button"
@@ -983,11 +1032,10 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
             <div className="text-[11px] text-slate-500 uppercase font-semibold">Ospiti</div>
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
       {/* 2. Marcatori Rapidi (Scorers) */}
-      <div className="clean-card p-5 space-y-4">
-        <h3 className="text-xs uppercase tracking-wider font-bold text-accvGreen">Marcatori Partita</h3>
+      <CollapsibleSection title="Marcatori Partita" className="space-y-4">
 
         {/* Home Scorers */}
         <div className="space-y-2">
@@ -1073,50 +1121,42 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
             ))}
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      {/* 3. Dettagli Evento & MVP */}
-      <div className="clean-card p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-[11px] font-bold text-slate-600 uppercase">Giornata</label>
-          <input
-            type="text"
-            value={data.matchday}
-            onChange={(e) => updateField("matchday", e.target.value)}
-            className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium"
-          />
-        </div>
-        <div>
-          <label className="text-[11px] font-bold text-slate-600 uppercase">Data & Ora</label>
-          <input
-            type="text"
-            value={data.date}
-            onChange={(e) => updateField("date", e.target.value)}
-            className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium"
-          />
-        </div>
-        <div>
-          <label className="text-[11px] font-bold text-slate-600 uppercase">Migliore in Campo (MVP)</label>
-          <select
-            value={data.mvp_name || ""}
-            onChange={(e) => updateField("mvp_name", e.target.value)}
-            className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"
-          >
-            <option value="">Nessuno / Non specificato</option>
-            {config.players.filter((p) => !["Allenatore", "Dirigente"].includes(p.role)).map((p) => (
-              <option key={p.key} value={p.name}>{p.name} (#{p.number})</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      {/* 3. Cartellini */}
+      <CollapsibleSection title="Cartellini" className="space-y-4">
+        {[{ type: accvScorerType, label: "ACCV", roster: true }, { type: opponentScorerType, label: opponentTeam.name, roster: false }].map((team) => (
+          <div key={team.type} className="space-y-3">
+            <div className="text-xs font-semibold text-slate-700">{team.label}</div>
+            {[
+              { color: "yellow", label: "Gialli", style: "bg-yellow-100 border-yellow-300 text-yellow-900" },
+              { color: "red", label: "Rossi", style: "bg-red-100 border-red-300 text-red-900" }
+            ].map((card) => {
+              const key = `${team.type}_${card.color}_cards`;
+              const names = data[key] || [];
+              return <div key={card.color} className="space-y-2">
+                <div className="text-[11px] font-bold text-slate-500 uppercase">Cartellini {card.label}</div>
+                {team.roster ? <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                  {config.players.filter((p) => !["Allenatore", "Dirigente"].includes(p.role)).map((p) => <button key={p.key} type="button" onClick={() => addCard(team.type, card.color, p.name)} className="px-2.5 py-1 text-[11px] rounded-lg bg-white hover:bg-slate-200 text-slate-700 font-semibold border border-slate-200">+{p.name}</button>)}
+                </div> : <div className="flex gap-2">
+                  <input id={`${team.type}-${card.color}-input`} type="text" className="clean-input flex-1 px-3 py-1.5 text-xs rounded-lg" placeholder="Cognome giocatore" onKeyDown={(e) => { if (e.key === "Enter") { addCard(team.type, card.color, e.target.value); e.target.value = ""; } }} />
+                  <button type="button" onClick={() => { const input = document.getElementById(`${team.type}-${card.color}-input`); addCard(team.type, card.color, input?.value); if (input) input.value = ""; }} className="px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-lg">+ Aggiungi</button>
+                </div>}
+                <div className="flex flex-wrap gap-2">{names.map((name, index) => <div key={`${name}-${index}`} className={`flex items-center gap-1.5 border px-3 py-1 rounded-lg text-xs font-bold ${card.style}`}><span>{name}</span><span aria-label={`cartellino ${card.label.toLowerCase()}`} className={`inline-block w-2.5 h-3.5 rounded-[2px] ${card.color === "yellow" ? "bg-yellow-400" : "bg-red-600"}`} /><button type="button" onClick={() => removeCard(team.type, card.color, index)} className="text-accvRed ml-1 font-bold">✕</button></div>)}</div>
+              </div>;
+            })}
+            {team.type === accvScorerType && <div className="border-t border-slate-100" />}
+          </div>
+        ))}
+      </CollapsibleSection>
 
-      {/* 4. Sfondo & Filtri */}
-      <div className="clean-card p-5 space-y-4">
+      {/* Sfondo & Filtri */}
+      <CollapsibleSection title="Sfondo & Filtri" className="space-y-4">
         {/* Background Selector */}
         <BackgroundSelector
           emotion={data.emotion}
           bgPath={data.bg_path}
-          onSelectEmotion={(em) => updateField("emotion", em)}
+          onSelectEmotion={(em) => onChange({ ...data, emotion: em, bg_path: null })}
           onSelectBgPath={(path) => updateField("bg_path", path)}
           onClearCustomBg={() => updateField("bg_path", null)}
           config={config}
@@ -1135,7 +1175,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast }) {
             <span>Effetto Flat (Riduci contrasto sfondo per far risaltare il testo)</span>
           </label>
         </div>
-      </div>
+      </CollapsibleSection>
     </div>
   );
 }
@@ -1245,7 +1285,7 @@ function NextMatchForm({ data, onChange, config, onSwap, showToast }) {
       <BackgroundSelector
         emotion={data.emotion}
         bgPath={data.bg_path}
-        onSelectEmotion={(em) => updateField("emotion", em)}
+        onSelectEmotion={(em) => onChange({ ...data, emotion: em, bg_path: null })}
         onSelectBgPath={(path) => updateField("bg_path", path)}
         onClearCustomBg={() => updateField("bg_path", null)}
         config={config}
@@ -1365,7 +1405,7 @@ function MVPForm({ data, onChange, config, showToast }) {
       <BackgroundSelector
         emotion={data.emotion}
         bgPath={data.bg_path}
-        onSelectEmotion={(em) => updateField("emotion", em)}
+        onSelectEmotion={(em) => onChange({ ...data, emotion: em, bg_path: null })}
         onSelectBgPath={(path) => updateField("bg_path", path)}
         onClearCustomBg={() => updateField("bg_path", null)}
         config={config}
@@ -1498,6 +1538,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
       body: JSON.stringify({
         key: editingPlayer.key,
         name: editingPlayer.name,
+        display_name: editingPlayer.display_name || "",
         role: editingPlayer.role || "Giocatore",
         number: jerseyNumber === null ? "" : String(jerseyNumber),
         team: "A.C.C.V."
@@ -1632,6 +1673,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
   const filteredPlayers = useMemo(() => (config.players || []).filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.display_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
       String(p.number).includes(searchQuery)
   ).sort((a, b) => {
@@ -1754,7 +1796,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
             <p className="text-[11px] text-slate-500">{managerTab === "my-team" ? `${filteredPlayers.length} elementi` : `${filteredTeams.length} squadre`}</p>
           </div>
           {managerTab === "my-team" ? (
-            <button onClick={() => { setEditingPlayer({ key: "", name: "", role: "Centrocampista", number: "", isEditing: false }); setIsPlayerModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-accvGreen hover:bg-accvGreenDark text-white text-xs font-bold rounded-xl shadow-sm">
+            <button onClick={() => { setEditingPlayer({ key: "", name: "", display_name: "", role: "Centrocampista", number: "", isEditing: false }); setIsPlayerModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-accvGreen hover:bg-accvGreenDark text-white text-xs font-bold rounded-xl shadow-sm">
               <Icon name="plus" className="w-4 h-4" /> Nuovo Calciatore
             </button>
           ) : (
@@ -1771,7 +1813,7 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold">
                 <th className="py-3 px-4">Foto Sagoma</th>
-                {[{ key: "name", label: "Nome Completo" }, { key: "role", label: "Ruolo" }, { key: "number", label: "N° Maglia" }].map(({ key, label }) => (
+                {[{ key: "name", label: "Nome Completo" }, { key: "display_name", label: "Nome Mostrato" }, { key: "role", label: "Ruolo" }, { key: "number", label: "N° Maglia" }].map(({ key, label }) => (
                   <th key={key} className={`py-3 px-4 ${key === "number" ? "text-center" : ""}`}>
                     <button onClick={() => setPlayerSort((prev) => ({ key, direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc" }))} className="hover:text-accvGreen">{label} {playerSort.key === key ? (playerSort.direction === "asc" ? "↑" : "↓") : "↕"}</button>
                   </th>
@@ -1868,6 +1910,17 @@ function RosterAndTeamsManager({ config, onConfigReload, showToast }) {
                   value={editingPlayer.name}
                   onChange={(e) => setEditingPlayer({ ...editingPlayer, name: e.target.value })}
                   className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 uppercase">Nome Mostrato</label>
+                <input
+                  type="text"
+                  value={editingPlayer.display_name || ""}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, display_name: e.target.value })}
+                  className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"
+                  placeholder="Facoltativo, usato nella grafica Risultato"
                 />
               </div>
 

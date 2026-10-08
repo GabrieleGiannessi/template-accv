@@ -39,6 +39,7 @@ from template_accv.generators.figurina import (
     get_player_card,
     load_roster,
 )
+from template_accv.utils.backgrounds import find_emotion_directory, get_default_background_path, get_random_image_from_dir
 
 WEB_DIR = BASE_DIR / "web"
 TEAMS_FILE = DATA_DIR / "teams.json"
@@ -178,6 +179,10 @@ def build_match_result_from_payload(payload: Dict[str, Any]) -> tuple[MatchResul
         away_score=int(payload.get("away_score", 0)),
         home_scorers=home_scorers,
         away_scorers=away_scorers,
+        home_yellow_cards=[str(name) for name in payload.get("home_yellow_cards", []) if name],
+        away_yellow_cards=[str(name) for name in payload.get("away_yellow_cards", []) if name],
+        home_red_cards=[str(name) for name in payload.get("home_red_cards", []) if name],
+        away_red_cards=[str(name) for name in payload.get("away_red_cards", []) if name],
         tournament=payload.get("tournament", "CAMPIONATO CALCETTO A5"),
         matchday=payload.get("matchday", "GIORNATA 1"),
         date=payload.get("date", ""),
@@ -366,10 +371,18 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
         try:
             if path == "/api/preview/result":
                 payload = json.loads(post_data.decode("utf-8")) if post_data else {}
+                if not payload.get("bg_path"):
+                    emotion_dir = find_emotion_directory(payload.get("emotion"))
+                    selected_bg = get_random_image_from_dir(emotion_dir) if emotion_dir else get_default_background_path()
+                    if not selected_bg:
+                        selected_bg = get_default_background_path()
+                    if selected_bg:
+                        payload["bg_path"] = str(selected_bg)
                 gen, fmt = build_match_result_from_payload(payload)
                 self.send_json({
                     "status": "ok",
                     "preview": gen.to_data_uri(),
+                    "bg_path": payload.get("bg_path"),
                     "width": gen.width,
                     "height": gen.height,
                     "format": fmt.value
@@ -533,6 +546,7 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
                     key = payload["key"].lower().strip().replace(" ", "-")
                     players[key] = {
                         "name": payload["name"],
+                        "display_name": str(payload.get("display_name", "")).strip(),
                         "role": payload.get("role", "Giocatore"),
                         "number": str(payload.get("number", "")),
                         "team": payload.get("team", "A.C.C.V.")
@@ -633,6 +647,7 @@ class ACCVRequestHandler(SimpleHTTPRequestHandler):
             players_list.append({
                 "key": key,
                 "name": pinfo.get("name", key.title()),
+                "display_name": pinfo.get("display_name", ""),
                 "role": pinfo.get("role", "Giocatore"),
                 "number": pinfo.get("number", ""),
                 "team": pinfo.get("team", "A.C.C.V."),

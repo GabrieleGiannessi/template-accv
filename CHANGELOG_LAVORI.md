@@ -4,6 +4,71 @@ Questo documento registra le modifiche funzionali e tecniche apportate al proget
 
 **Regola di manutenzione:** al termine di ogni lavoro sul progetto, aggiungere qui una nuova voce con la data, una sintesi delle modifiche e gli eventuali controlli effettuati. Il [README](README.md) rimanda a questo storico.
 
+## 2026-10-08 — Marcatori e cartellini sulla stessa riga
+
+- Accorpati per giocatore i marcatori e i cartellini gialli/rossi, mantenendo sulla riga nome, palloni e tessere.
+- Ridotte di circa il 12% le icone dei cartellini nel riepilogo.
+- Controllo effettuato: `git diff --check`; non sono stati eseguiti test automatici.
+
+## 2026-10-08 — Migliorie al form Risultato
+
+- Riattivata la selezione per emozione: la scheda resta selezionata e scegliendo o riaprendo un tema si genera una nuova copertina della categoria.
+- Ignorate le risposte di anteprima superate, così un render precedente non può sostituire il tema appena scelto.
+- Spostati Giornata, Data e Ora sotto Competizione e Stagione; Data e Ora ora usano campi dedicati.
+- Rimosso il campo MVP dal tab Risultato e rese richiudibili tutte le sezioni del form, mantenendo l'anteprima sempre visibile.
+- Controllo effettuato: `git diff --check`; non sono stati eseguiti test automatici.
+
+## 2026-10-08 — Correzione Nome Mostrato e icona cartellino rosso
+
+- Spostato il campo **Nome Mostrato** nel modulo di modifica/inserimento calciatore, così la matita consente di modificarlo e salvarlo.
+- Corretto il criterio che distingueva i colori delle icone: il rosso non viene più scambiato per giallo.
+- Controllo effettuato: `git diff --check`; non sono stati eseguiti test automatici.
+
+## 2026-10-08 — Note permanenti per le analisi
+
+- Creato `NOTE_ANALISI_PROGETTO.md` con la mappa delle aree esplorate, i comportamenti rilevanti e la regola di consultazione/aggiornamento per le prossime analisi.
+
+## 2026-10-08 — Nome mostrato in rosa e riepilogo marcatori
+
+- Aggiunto il campo facoltativo **Nome Mostrato** alla gestione dei calciatori ACCV, visibile nella tabella e nel modulo di inserimento/modifica.
+- Usato il nome mostrato nella grafica Risultato per i marcatori ACCV quando compilato, mantenendo il cognome come ripiego.
+- Ridotta la dimensione dei nomi dei marcatori sotto quella dei titoli squadra e aumentata la palla alla dimensione del titolo, centrata verticalmente rispetto al testo.
+- Controllo effettuato: `git diff --check`; non sono stati eseguiti test automatici.
+
+## 2026-10-08 — Icone personalizzate per i cartellini
+
+- Scontornate le icone allegate dei cartellini gialli e rossi, preservando i dettagli interni.
+- Sostituito il disegno generico dei cartellini nel riepilogo della grafica Risultato con le nuove icone.
+- Controllo effettuato: `git diff --check`; non sono stati eseguiti test automatici.
+
+## 2026-10-08 — Grafica Risultato: pallone e immagine stabile
+
+- Sostituita l'icona disegnata del gol con il pallone allegato, scontornato in PNG trasparente.
+- Scontornato il solo sfondo bianco connesso ai bordi, mantenendo il bianco nelle aree interne del pallone.
+- Impostato il font dei cognomi sul carattere dei titoli e aumentata la dimensione, adattandola allo spazio disponibile.
+- Fissato lo sfondo casuale scelto dall'anteprima per riutilizzarlo nei render successivi e applicato il download direttamente dall'anteprima corrente.
+- La variazione automatica della categoria emotiva con il punteggio non cambia più lo sfondo mentre si aggiungono i marcatori.
+- Controllo effettuato: revisione delle modifiche; non sono stati eseguiti test automatici.
+
+## 2026-10-08 — Ingrandimento dei marcatori nella grafica Risultato
+
+- Aumentata ulteriormente la dimensione dei cognomi e delle icone dei gol nella grafica.
+- Ridisegnata l'icona del pallone con pannelli pentagonali e resa adattiva per evitare che copra il testo.
+- Controllo effettuato: `git diff --check`, senza errori. Non sono stati eseguiti test automatici.
+
+## 2026-10-08 — Rifinitura dei nomi nella grafica Risultato
+
+- Aumentata sensibilmente la dimensione dei cognomi nella sezione marcatori/cartellini.
+- Rimossi i nomi squadra e le intestazioni dalla sezione, lasciando solo cognomi e icone; il testo si adatta allo spazio disponibile.
+- Controllo effettuato: `git diff --check`, senza errori. Non sono stati eseguiti test automatici.
+
+## 2026-10-08 — Marcatori e cartellini nel risultato partita
+
+- Collegato l'inserimento e la rimozione dei marcatori all'aggiornamento del punteggio nel form, mantenendo il supporto ai dati senza liste marcatori.
+- Aggiunta la gestione dei cartellini gialli e rossi per entrambe le squadre.
+- Aggiunto nella grafica Risultato il riepilogo condizionale dei marcatori con icone pallone e dei cartellini con le rispettive icone, mantenendo invariato il layout quando i dati non sono specificati.
+- Controllo effettuato: `git diff --check`, senza errori. Non sono stati eseguiti test automatici.
+
 ## 2026-10-08 — Aggiornamento percorsi degli sfondi
 
 - Adeguata la selezione casuale agli sfondi standard in `assets/backgrounds/standard/` e alle categorie in `assets/backgrounds/temi/`.

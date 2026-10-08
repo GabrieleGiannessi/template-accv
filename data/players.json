@@ -25,6 +25,7 @@
   },
   "f-citti": {
     "name": "Federico Citti",
+    "display_name": "Citti F.",
     "role": "Centrocampista",
     "number": "69",
     "team": "A.C.C.V."
@@ -37,6 +38,7 @@
   },
   "g-giannessi": {
     "name": "Gabriele Giannessi",
+    "display_name": "Giannessi G.",
     "role": "Difensore",
     "number": "20",
     "team": "A.C.C.V."
@@ -49,6 +51,7 @@
   },
   "l-giannessi": {
     "name": "Lorenzo Giannessi",
+    "display_name": "Giannessi L.",
     "role": "Difensore",
     "number": "11",
     "team": "A.C.C.V."
@@ -79,6 +82,7 @@
   },
   "s-citti": {
     "name": "Samuele Citti",
+    "display_name": "Citti S.",
     "role": "Attaccante",
     "number": "32",
     "team": "A.C.C.V."
