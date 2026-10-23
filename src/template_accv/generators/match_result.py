@@ -330,11 +330,16 @@ class MatchResultGenerator(BaseGraphicGenerator):
                 season_width = get_text_dimensions(season_label, season_font)[0] if season_label else 0
                 spacing = 28 if competition_label and season_label else 0
                 start_x = (self.width - comp_width - spacing - season_width) // 2
+                # Different fitted font sizes have different ascents. Align their
+                # baselines so the competition title and season stay on one line.
+                comp_ascent = comp_font.getmetrics()[0] if competition_label else 0
+                season_ascent = season_font.getmetrics()[0] if season_label else 0
+                baseline_y = header_y + max(comp_ascent, season_ascent)
                 if competition_label:
-                    self.draw.text((start_x, header_y), competition_label, font=comp_font, fill=(255, 255, 255, 255), stroke_width=2, stroke_fill=(10, 16, 18, 255))
+                    self.draw.text((start_x, baseline_y), competition_label, font=comp_font, fill=(255, 255, 255, 255), stroke_width=2, stroke_fill=(10, 16, 18, 255), anchor="ls")
                 if season_label:
                     season_x = start_x + comp_width + spacing
-                    self.draw.text((season_x, header_y), season_label, font=season_font, fill=(235, 190, 73, 255), stroke_width=2, stroke_fill=(10, 16, 18, 255))
+                    self.draw.text((season_x, baseline_y), season_label, font=season_font, fill=(235, 190, 73, 255), stroke_width=2, stroke_fill=(10, 16, 18, 255), anchor="ls")
 
                 if self.data.competition_logo_path:
                     logo_path = Path(self.data.competition_logo_path)

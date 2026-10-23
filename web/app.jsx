@@ -104,12 +104,12 @@ function Icon({ name, className = "w-5 h-5", ...props }) {
 
 const PlayerRosterRow = React.memo(function PlayerRosterRow({ player, onEdit, onDelete, onPhotoUpload }) {
   return (
-    <tr className="hover:bg-slate-50 transition-colors">
+    <tr className="hover:bg-slate-50 transition-colors [content-visibility:auto] [contain-intrinsic-size:auto_56px]">
       <td className="py-2 px-4">
         <label className="relative cursor-pointer group flex items-center">
           <input type="file" accept="image/png,image/webp" className="hidden" onChange={(e) => onPhotoUpload(e, player.key)} />
           <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center group-hover:border-accvGreen">
-            {player.photo_url ? <img loading="lazy" decoding="async" src={player.photo_url} alt={player.name} className="w-full h-full object-cover object-top" /> : <span className="text-[10px] text-slate-400">No foto</span>}
+            {player.photo_url ? <img loading="lazy" decoding="async" width="40" height="40" src={player.photo_url} alt={player.name} className="w-full h-full object-cover object-top" /> : <span className="text-[10px] text-slate-400">No foto</span>}
           </div>
           <span className="ml-2 text-[10px] text-accvGreen group-hover:underline font-semibold">Cambia</span>
         </label>
@@ -2193,37 +2193,8 @@ function PreviewPanel({
             <span>Live Studio Preview</span>
           </span>
 
-          {/* Safe Zone Toggle (Only for vertical 9:16 formats) */}
-          {selectedFormat === "9:16" && (
-            <button
-              onClick={onToggleSafeZone}
-              className={`text-[11px] px-2.5 py-1 rounded-lg font-bold transition-all border ${
-                showSafeZone
-                  ? "bg-red-50 text-red-600 border-red-200"
-                  : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300"
-              }`}
-            >
-              {showSafeZone ? "✓ Safe Zone Attiva" : "Safe Zone IG"}
-            </button>
-          )}
         </div>
 
-        {/* Format Selector Pills */}
-        <div className="grid grid-cols-5 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-          {formats.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => onSelectFormat(f.id)}
-              className={`py-1.5 text-[11px] font-bold rounded-lg transition-all text-center ${
-                selectedFormat === f.id
-                  ? "bg-white text-accvGreenDark font-extrabold shadow-sm"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              {f.label.split(" ")[0]}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Canvas / Render Display Container */}
@@ -2259,11 +2230,25 @@ function PreviewPanel({
         )}
       </div>
 
+      {activeTab === "result" && <label className="block text-[11px] font-bold text-slate-600">
+        Formato
+        <select aria-label="Formato" value={selectedFormat} onChange={e => onSelectFormat(e.target.value)} className="clean-input mt-1 w-full rounded-xl px-3 py-2.5 text-xs font-semibold">
+          {formats.map(format => <option key={format.id} value={format.id}>{format.label}</option>)}
+        </select>
+      </label>}
+
       {coverControls && <div className="grid grid-cols-3 gap-3 text-[11px] font-semibold text-slate-600">
         <label>Zoom {coverControls.zoom.toFixed(1)}×<input aria-label="Zoom copertina" type="range" min="1" max="2.5" step="0.1" value={coverControls.zoom} onChange={e => coverControls.onChange("bg_zoom", Number(e.target.value))} className="w-full accent-accvGreen" /></label>
         <label>Sposta orizzontalmente<input aria-label="Posizione orizzontale copertina" type="range" min="0" max="1" step="0.01" value={coverControls.x} onChange={e => coverControls.onChange("bg_x", Number(e.target.value))} className="w-full accent-accvGreen" /></label>
         <label>Sposta verticalmente<input aria-label="Posizione verticale copertina" type="range" min="0" max="1" step="0.01" value={coverControls.y} onChange={e => coverControls.onChange("bg_y", Number(e.target.value))} className="w-full accent-accvGreen" /></label>
-        <button type="button" onClick={() => { coverControls.onChange("bg_zoom", 1); coverControls.onChange("bg_x", 0.5); coverControls.onChange("bg_y", 0.5); }} className="col-span-3 justify-self-end rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] font-bold hover:bg-slate-50">Ripristina ritaglio</button>
+        <div className="col-span-3 flex items-center justify-between gap-2">
+          {selectedFormat === "9:16" ? (
+            <button type="button" onClick={onToggleSafeZone} className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all ${showSafeZone ? "bg-red-50 text-red-600 border-red-200" : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300"}`}>
+              {showSafeZone ? "✓ Safe Zone Attiva" : "Safe Zone IG"}
+            </button>
+          ) : <span />}
+          <button type="button" onClick={() => { coverControls.onChange("bg_zoom", 1); coverControls.onChange("bg_x", 0.5); coverControls.onChange("bg_y", 0.5); }} className="rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] font-bold hover:bg-slate-50">Ripristina ritaglio</button>
+        </div>
         {(coverControls.zoom >= 2.2 || coverControls.x <= 0.08 || coverControls.x >= 0.92 || coverControls.y <= 0.08 || coverControls.y >= 0.92) && <p className="col-span-3 rounded-lg bg-amber-50 px-3 py-2 text-amber-800">Ritaglio molto spostato o ingrandito: controlla che il soggetto principale resti visibile.</p>}
       </div>}
 
@@ -2274,7 +2259,7 @@ function PreviewPanel({
           className="w-full py-3 px-4 rounded-xl bg-accvGreen hover:bg-accvGreenDark text-white font-extrabold text-sm tracking-wide shadow-sm hover:shadow-green-glow transition-all transform active:scale-95 flex items-center justify-center space-x-2"
         >
           <Icon name="download" className="w-5 h-5 text-white" />
-          <span>SCARICA GRAFICA ({selectedFormat})</span>
+          <span>SCARICA GRAFICA</span>
         </button>
 
         <div className="grid grid-cols-3 gap-2">

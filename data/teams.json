@@ -295,26 +295,26 @@
     "rivalry": 1
   },
   "imacellai": {
-    "name": "I Macellai",
+    "name": "SPRF",
     "extended_name": "",
-    "short_name": "IMC",
+    "short_name": "SPRF",
     "primary_color": [
+      0,
+      0,
+      0
+    ],
+    "secondary_color": [
+      130,
+      117,
+      33
+    ],
+    "tertiary_color": [
       255,
       255,
       255
     ],
-    "secondary_color": [
-      239,
-      68,
-      68
-    ],
-    "tertiary_color": [
-      59,
-      130,
-      246
-    ],
     "notes": "",
     "logo_filename": "imacellai.png",
-    "rivalry": 1
+    "rivalry": 2
   }
 }
