@@ -158,14 +158,11 @@ class MatchResultGenerator(BaseGraphicGenerator):
 
         def find_or_add(name: str) -> dict:
             clean_name = " ".join(name.strip().casefold().split())
-            short_name = " ".join(self._short_player_name(name).casefold().split())
-            aliases = {clean_name, short_name} - {""}
-            row = next((candidate for candidate in rows if candidate["aliases"] & aliases), None)
+            # A surname is not a player identifier: keep each full name distinct.
+            row = next((candidate for candidate in rows if candidate["key"] == clean_name), None)
             if row is None:
-                row = {"aliases": aliases, "label": self._short_player_name(name), "goals": 0, "own_goals": 0, "cards": []}
+                row = {"key": clean_name, "full_name": name.strip(), "label": self._short_player_name(name), "goals": 0, "own_goals": 0, "cards": []}
                 rows.append(row)
-            else:
-                row["aliases"].update(aliases)
             return row
 
         for scorer in scorers:
@@ -181,6 +178,19 @@ class MatchResultGenerator(BaseGraphicGenerator):
             find_or_add(name)["cards"].append((255, 210, 0, 255))
         for name in red_cards:
             find_or_add(name)["cards"].append((220, 38, 38, 255))
+
+        # If distinct players would share the same surname/display label, add
+        # the first-name initial (e.g. "Citti F." and "Citti S.").
+        label_counts = {}
+        for row in rows:
+            if row["full_name"] != "Autogol":
+                label_counts[row["label"].casefold()] = label_counts.get(row["label"].casefold(), 0) + 1
+        for row in rows:
+            if row["full_name"] == "Autogol" or label_counts.get(row["label"].casefold(), 0) < 2:
+                continue
+            parts = row["full_name"].split()
+            if len(parts) > 1:
+                row["label"] = f"{parts[-1]} {parts[0][0].upper()}."
         return rows
 
     def _draw_detail_block(self, bounds: tuple, rows: list, font_size: int, line_height: int) -> None:

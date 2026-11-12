@@ -346,9 +346,6 @@ function App() {
   // Form States: Match Result
   const [resultData, setResultData] = useState({
     tournament: "CAMPIONATO CALCETTO A5",
-    matchday: "GIORNATA 5",
-    date: "Giovedì 23 Luglio 2026",
-    time: "21:30",
     location: "Centro Sportivo ACCV - Campo A",
     home_team: { name: "A.C.C.V.", short_name: "ACCV", primary_color: [16, 185, 129] },
     away_team: { name: "REAL MATRID", short_name: "MAT", primary_color: [239, 68, 68] },
@@ -367,7 +364,7 @@ function App() {
     bg_x: 0.5,
     bg_y: 0.5,
     graphic_variant: "balanced",
-    include_competition_info: false,
+    include_competition_info: true,
     mix_team_colors: false,
     contrast_factor: 1.0,
     remove_contrast: false
@@ -376,9 +373,6 @@ function App() {
   // Form States: Next Match
   const [nextData, setNextData] = useState({
     tournament: "CAMPIONATO CALCETTO A5",
-    matchday: "PROSSIMA PARTITA",
-    date: "Giovedì 30 Luglio 2026",
-    time: "21:30",
     location: "Centro Sportivo ACCV - Campo A",
     field_name: "Campo A",
     home_team: { name: "A.C.C.V.", short_name: "ACCV" },
@@ -399,7 +393,6 @@ function App() {
     saves: 0,
     rating: "9.5",
     match_opponent: "Real Matrid",
-    match_date: "23 Luglio 2026",
     emotion: "felicita",
     bg_path: null,
     contrast_factor: 1.0,
@@ -444,9 +437,6 @@ function App() {
           setResultData((prev) => ({
             ...prev,
             tournament: em.tournament || prev.tournament,
-            matchday: em.matchday || prev.matchday,
-            date: em.date || prev.date,
-            time: em.time || prev.time,
             location: em.location || prev.location,
             home_team: accvTeam ? { ...prev.home_team, ...accvTeam } : prev.home_team,
                     away_team: em.away_team ? { ...em.away_team, ...(data.teams.find(team => team.name === em.away_team.name) ? { ...data.teams.find(team => team.name === em.away_team.name), ...em.away_team } : {}) } : prev.away_team,
@@ -656,7 +646,6 @@ function App() {
 
   const resultWarnings = [
     !resultData.away_team?.name ? "Seleziona la squadra avversaria." : null,
-    !resultData.date ? "Inserisci la data della partita." : null,
     ...["home", "away"].filter(team => (resultData[`${team}_scorers`] || []).length && (resultData[`${team}_scorers`] || []).reduce((total, scorer) => total + (Number(scorer.goals) || 0), 0) !== Number(resultData[`${team}_score`])).map(team => `I gol registrati per ${resultData[`${team}_team`].name} non coincidono con il punteggio.`)
   ].filter(Boolean);
 
@@ -698,7 +687,7 @@ function App() {
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto max-w-full">
+        <nav aria-label="Sezioni dello studio" className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto max-w-full">
           {[
             { id: "result", label: "Risultato", icon: "trophy" },
             { id: "next", label: "Prossima Partita", icon: "calendar" },
@@ -710,6 +699,7 @@ function App() {
             return (
               <button
                 key={tab.id}
+                aria-current={isActive ? "page" : undefined}
                 onClick={() => {
                   setActiveTab(tab.id);
                   if (tab.id === "result") {
@@ -720,7 +710,7 @@ function App() {
                     setSelectedFormat("9:16");
                   }
                 }}
-                className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accvGreen focus-visible:ring-offset-2 ${
                   isActive
                     ? "bg-accvGreen text-white shadow-sm font-extrabold"
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
@@ -737,10 +727,19 @@ function App() {
       {activeTab === "result" && resultWarnings.length > 0 && <section role="status" aria-label="Avvisi sui dati della partita" className="mx-4 mt-4 lg:mx-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><strong>Controlla questi dati prima di scaricare:</strong><ul className="list-disc pl-5 mt-1">{resultWarnings.map(warning => <li key={warning}>{warning}</li>)}</ul></section>}
 
       {/* Main Studio Body: 2-Column Split Screen */}
-      <main className={`flex-1 w-full mx-auto p-4 lg:p-6 ${activeTab === "roster" ? "max-w-none" : "max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6"}`}>
+      <main className={`flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 ${activeTab === "roster" ? "" : "grid grid-cols-1 lg:grid-cols-12 gap-6"}`}>
         
         {/* LEFT COLUMN: Controls & Forms (lg:col-span-7) */}
-        <div className={activeTab === "roster" ? "w-full" : "lg:col-span-7 space-y-6"}>
+        <div className={activeTab === "roster" ? "w-full space-y-5" : "lg:col-span-7 space-y-5"}>
+          <section className="clean-card flex items-center gap-4 px-5 py-4 lg:px-6">
+            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${activeTab === "mvp" ? "bg-accvGoldLight text-accvGoldDark" : "bg-accvGreenLight text-accvGreenDark"}`}>
+              <Icon name={{ result: "trophy", next: "calendar", mvp: "star", figurina: "badge", roster: "settings" }[activeTab]} className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-header text-2xl tracking-wide text-slate-900">{{ result: "Risultato", next: "Prossima Partita", mvp: "Migliore in Campo", figurina: "Figurine Panini", roster: "Gestione" }[activeTab]}</h2>
+              <p className="text-xs text-slate-500">{{ result: "Prepara e scarica la grafica del risultato.", next: "Crea la locandina della prossima sfida.", mvp: "Celebra il giocatore della partita.", figurina: "Crea una card personalizzata del calciatore.", roster: "Gestisci rosa, squadre, stagioni e competizioni." }[activeTab]}</p>
+            </div>
+          </section>
           {activeTab === "result" && (
             <MatchResultForm
               data={resultData}
@@ -840,17 +839,6 @@ function CollapsibleSection({ title, children, className = "" }) {
   );
 }
 
-function toDateFieldValue(value) {
-  const text = String(value || "").trim();
-  const iso = text.match(/^(\d{4}-\d{2}-\d{2})/);
-  if (iso) return iso[1];
-  const match = text.match(/(?:[A-Za-zÀ-ÿ]+\s+)?(\d{1,2})\s+([A-Za-zÀ-ÿ]+)\s+(\d{4})/i);
-  if (!match) return "";
-  const months = { gennaio: "01", febbraio: "02", marzo: "03", aprile: "04", maggio: "05", giugno: "06", luglio: "07", agosto: "08", settembre: "09", ottobre: "10", novembre: "11", dicembre: "12" };
-  const month = months[match[2].toLowerCase()];
-  return month ? `${match[3]}-${month}-${match[1].padStart(2, "0")}` : "";
-}
-
 function CompetitionSeasonSelector({ data, onChange, config, showMatchDetails = false, collapsible = false }) {
   const competitions = config.competitions || [];
   const competition = competitions.find(item => item.key === data.competition_key) || competitions[0];
@@ -892,11 +880,7 @@ function CompetitionSeasonSelector({ data, onChange, config, showMatchDetails = 
       <div><label className="text-[11px] font-bold text-slate-600 uppercase">Stagione</label><select value={season?.key || ""} onChange={e => applySelection(competition, seasons.find(item => item.key === e.target.value))} disabled={!seasons.length} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-bold"><option value="">{seasons.length ? "Seleziona stagione" : "Nessuna stagione associata"}</option>{seasons.map(item => <option key={item.key} value={item.key}>{item.description}</option>)}</select></div>
       {!teams.length && <p className="md:col-span-2 text-xs text-amber-700">La stagione selezionata non ha squadre associate a questa competizione.</p>}
     </div>
-    {showMatchDetails && <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
-      <div><label className="text-[11px] font-bold text-slate-600 uppercase">Giornata</label><input type="text" value={data.matchday || ""} onChange={e => onChange({ ...data, matchday: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium" /></div>
-      <div><label className="text-[11px] font-bold text-slate-600 uppercase">Data</label><input type="date" value={toDateFieldValue(data.date)} onChange={e => onChange({ ...data, date: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium" /></div>
-      <div><label className="text-[11px] font-bold text-slate-600 uppercase">Ora</label><input type="time" value={data.time || ""} onChange={e => onChange({ ...data, time: e.target.value })} className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium" /></div>
-    </div>}
+    {showMatchDetails && <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-xs text-slate-600">Competizione e stagione compariranno nella grafica.</div>}
     {showMatchDetails && <label className="flex items-center gap-2 border-t border-slate-100 pt-3 text-xs font-semibold text-slate-700"><input type="checkbox" checked={Boolean(data.include_competition_info)} onChange={e => onChange({ ...data, include_competition_info: e.target.checked })} className="rounded border-slate-300 text-accvGreen focus:ring-accvGreen" /><span>Aggiungi informazioni</span></label>}
   </div>;
   return collapsible ? <CollapsibleSection title="Competizione attuale">{fields}</CollapsibleSection> : <div className="clean-card p-5">{fields}</div>;
@@ -922,7 +906,7 @@ function MatchResultForm({ data, onChange, config, onSwap, showToast, hasLastRes
     const current = data[listKey] || [];
     const existing = current.find((s) => s.name === playerName && Boolean(s.own_goal) === ownGoal);
     if (existing) {
-      const updated = current.map((s) => s.name === playerName ? { ...s, goals: s.goals + 1 } : s);
+      const updated = current.map((s) => s.name === playerName && Boolean(s.own_goal) === ownGoal ? { ...s, goals: s.goals + 1 } : s);
       updateScorers(listKey, updated, `${teamType}_score`, goals);
     } else {
       updateScorers(listKey, [...current, { name: playerName, goals, ...(ownGoal ? { own_goal: true } : {}) }], `${teamType}_score`, goals);
@@ -1298,26 +1282,8 @@ function NextMatchForm({ data, onChange, config, onSwap, showToast }) {
         </div>
       </div>
 
-      {/* Event Details */}
+      {/* Luogo della partita */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-[11px] font-bold text-slate-600 uppercase">Titolo / Matchday</label>
-          <input
-            type="text"
-            value={data.matchday}
-            onChange={(e) => updateField("matchday", e.target.value)}
-            className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium"
-          />
-        </div>
-        <div>
-          <label className="text-[11px] font-bold text-slate-600 uppercase">Data & Calcio d'Inizio</label>
-          <input
-            type="text"
-            value={data.date}
-            onChange={(e) => updateField("date", e.target.value)}
-            className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium"
-          />
-        </div>
         <div>
           <label className="text-[11px] font-bold text-slate-600 uppercase">Impianto / Campo Sportivo</label>
           <input
@@ -1435,15 +1401,6 @@ function MVPForm({ data, onChange, config, showToast }) {
             type="text"
             value={data.match_opponent}
             onChange={(e) => updateField("match_opponent", e.target.value)}
-            className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium"
-          />
-        </div>
-        <div>
-          <label className="text-[11px] font-bold text-slate-600 uppercase">Data Partita</label>
-          <input
-            type="text"
-            value={data.match_date}
-            onChange={(e) => updateField("match_date", e.target.value)}
             className="clean-input w-full mt-1 px-3 py-2 text-xs rounded-lg font-medium"
           />
         </div>

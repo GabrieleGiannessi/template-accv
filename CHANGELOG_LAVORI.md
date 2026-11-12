@@ -4,6 +4,14 @@ Questo documento registra le modifiche funzionali e tecniche apportate al proget
 
 **Regola di manutenzione:** al termine di ogni lavoro sul progetto, aggiungere qui una nuova voce con la data, una sintesi delle modifiche e gli eventuali controlli effettuati. Il [README](README.md) rimanda a questo storico.
 
+## 2026-11-12 — Marcatori distinti e interfaccia uniforme
+
+- Corretto il raggruppamento dei marcatori: ora usa il nome completo, così giocatori con lo stesso cognome restano separati. Quando le etichette coincidono, la grafica aggiunge l'iniziale del nome (per esempio `Citti F.` e `Citti S.`); cartellini e gol confluiscono sulla riga del giocatore corretto.
+- Attivato di default **Aggiungi informazioni**, anche per richieste API che non indicano il flag.
+- Rimossi dai moduli e dalle grafiche i riferimenti a giornata, data e orario; il campo della prossima partita resta opzionale e la dicitura finale è stata resa neutra.
+- Uniformate le testate delle sezioni principali e migliorati leggibilità, navigazione da tastiera e uso su schermi piccoli.
+- Controlli: revisione statica delle modifiche; test automatici non eseguiti.
+
 ## 2026-10-08 — Marcatori e cartellini sulla stessa riga
 
 - Accorpati per giocatore i marcatori e i cartellini gialli/rossi, mantenendo sulla riga nome, palloni e tessere.

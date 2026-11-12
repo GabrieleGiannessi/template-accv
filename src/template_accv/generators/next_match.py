@@ -1,5 +1,5 @@
 """
-Next Match graphic generator (Prossima Partita / Matchday promo).
+Next Match graphic generator (Prossima Partita promo).
 Renders promo graphics across social media aspect ratios (9:16, 4:3, 16:9, 1:1, 4:5).
 """
 
@@ -40,7 +40,7 @@ class NextMatchGenerator(BaseGraphicGenerator):
     def render(self) -> Image.Image:
         """Render full Next Match promo graphic."""
         # 1. Header
-        self.draw_top_header(self.data.tournament, self.data.matchday)
+        self.draw_top_header(self.data.tournament, "")
 
         # 2. Main Title Banner ("PROSSIMA PARTITA")
         if self.aspect_ratio == AspectRatio.RATIO_9_16:
@@ -54,7 +54,7 @@ class NextMatchGenerator(BaseGraphicGenerator):
             font_sz = 68
         
         font_title = get_font("HEADER", font_sz)
-        title_str = "MATCHDAY"
+        title_str = "PROSSIMA PARTITA"
         tw, th = get_text_dimensions(title_str, font_title)
         self.draw.text(
             ((self.width - tw) // 2, y_title),
@@ -64,7 +64,7 @@ class NextMatchGenerator(BaseGraphicGenerator):
         )
         
         font_sub = get_font("BODY", 24 if self.is_vertical else 20)
-        sub_str = "PROSSIMA PARTITA"
+        sub_str = self.data.tournament.upper()
         tw_sub, th_sub = get_text_dimensions(sub_str, font_sub)
         self.draw.text(
             ((self.width - tw_sub) // 2, y_title + th + 4),
@@ -146,44 +146,29 @@ class NextMatchGenerator(BaseGraphicGenerator):
             fill=Colors.TEXT_WHITE
         )
 
-        # 4. Event Details Card (Date, Time, Location)
-        y_info = y_card + card_h + 30
-        info_h = 360 if self.aspect_ratio == AspectRatio.RATIO_9_16 else (220 if self.is_wide_landscape else 260)
-        info_bbox = (margin_x, y_info, self.width - margin_x, y_info + info_h)
-
-        draw_rounded_card(
-            self.draw,
-            info_bbox,
-            radius=20,
-            fill=Colors.CARD_BG,
-            border=Colors.CARD_BORDER,
-            border_width=2
-        )
-
-        details = [
-            ("📅  DATA", self.data.date or "Da Definire"),
-            ("⏰  ORARIO", self.data.time or "21:00"),
-            ("🏟️  CAMPO", self.data.location or self.data.field_name or "Centro Sportivo"),
-        ]
-
-        font_info_label = get_font("HEADER", 32 if self.is_vertical else 26)
-        font_info_val = get_font("BODY", 24 if self.is_vertical else 20)
-
-        item_height = info_h // len(details)
-        start_y = y_info + 15
-
-        for i, (label, val) in enumerate(details):
-            curr_y = start_y + i * item_height
+        # 4. Optional venue card
+        details = [("🏟️  CAMPO", self.data.location or self.data.field_name)] if (self.data.location or self.data.field_name) else []
+        if details:
+            y_info = y_card + card_h + 30
+            info_h = 180 if self.aspect_ratio == AspectRatio.RATIO_9_16 else (120 if self.is_wide_landscape else 140)
+            info_bbox = (margin_x, y_info, self.width - margin_x, y_info + info_h)
+            draw_rounded_card(
+                self.draw,
+                info_bbox,
+                radius=20,
+                fill=Colors.CARD_BG,
+                border=Colors.CARD_BORDER,
+                border_width=2
+            )
+            font_info_label = get_font("HEADER", 32 if self.is_vertical else 26)
+            font_info_val = get_font("BODY", 24 if self.is_vertical else 20)
+            label, val = details[0]
+            _, label_h = get_text_dimensions(label, font_info_label)
+            _, val_h = get_text_dimensions(val, font_info_val)
+            curr_y = y_info + (info_h - max(label_h, val_h)) // 2
             self.draw.text((margin_x + 40, curr_y), label, font=font_info_label, fill=Colors.ACCENT_CYAN)
             val_w, _ = get_text_dimensions(val, font_info_val)
             self.draw.text((self.width - margin_x - 40 - val_w, curr_y + 4), val, font=font_info_val, fill=Colors.TEXT_WHITE)
-
-            if i < len(details) - 1:
-                self.draw.line(
-                    [margin_x + 30, curr_y + item_height - 5, self.width - margin_x - 30, curr_y + item_height - 5],
-                    fill=Colors.CARD_BORDER,
-                    width=1
-                )
 
         # 5. Footer Info
         self.draw_footer_brand(f"NON MANCARE!  •  {self.data.tournament}")

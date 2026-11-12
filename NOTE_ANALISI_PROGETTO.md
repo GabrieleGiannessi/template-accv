@@ -25,10 +25,12 @@ Prima di esplorare il progetto per una nuova modifica o analisi, consultare ques
 - La rosa è persistita in `data/players.json`. Le modifiche al suo schema vanno propagate sia nel salvataggio API sia nella configurazione restituita al client.
 - Il modulo attivato dalla matita è il modal calciatore; verificare che i campi della rosa siano all'interno del relativo form e legati a `editingPlayer` (non al modal squadra).
 - Il renderer seleziona l'icona cartellino in `MatchResultGenerator._draw_card_icon`; distinguere giallo e rosso tramite il canale verde rispetto al blu, dato che entrambi hanno il rosso come canale dominante.
-- `MatchResultGenerator._collect_detail_rows()` abbina gol e cartellini usando il nome completo e il cognome, così ogni giocatore occupa una sola riga nel riepilogo.
+- `MatchResultGenerator._collect_detail_rows()` raggruppa gol e cartellini con il nome completo normalizzato; il solo cognome non identifica un giocatore. Se due nomi mostrati coincidono, il render aggiunge l'iniziale del nome (ad esempio `Citti F.` e `Citti S.`).
 - La selezione delle emozioni è nel componente `BackgroundSelector`: il tab deve restare attivo in base alla modalità scelta, senza dipendere dal percorso dello sfondo casuale ricevuto dall'anteprima. Scegliere una categoria azzera il percorso fissato per consentire un nuovo campionamento.
 - Le richieste di anteprima sono debounced; quando una modifica richiede un nuovo sfondo, ignorare le risposte obsolete che potrebbero rifissare il percorso della richiesta precedente.
-- Nel tab Risultato il selettore Competizione/Stagione comprende Giornata, Data e Ora; il form usa `type="date"` e `type="time"` e converte le date italiane legacy per valorizzare il campo data.
+- Il tab Risultato ha l'opzione `include_competition_info` attiva inizialmente; il server usa `true` anche per i payload precedenti che non specificano l'opzione.
+- Le grafiche e i moduli di Risultato, Prossima Partita e MVP non devono mostrare riferimenti alla giornata, data o ora; il luogo della prossima partita resta facoltativo.
+- Le sezioni principali condividono la testata pagina, i contenitori e gli stati di focus per rendere più uniforme la navigazione.
 - Le sezioni del form Risultato usano `CollapsibleSection`; la preview è esterna al form e resta sempre visibile.
 - I font sono caricati da `assets/fonts/` attraverso `src/template_accv/utils/fonts.py`; verificare che la famiglia usata esista localmente perché il fallback può avere dimensioni diverse.
 - Prima di modificare file, controllare `git status`: la cartella può già contenere modifiche locali dell'utente. Preservarle.

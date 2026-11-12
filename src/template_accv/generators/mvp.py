@@ -39,8 +39,8 @@ class MVPGenerator(BaseGraphicGenerator):
     def render(self) -> Image.Image:
         """Render MVP graphic."""
         # 1. Header
-        matchday_info = f"MATCH vs {self.data.match_opponent.upper()}" if self.data.match_opponent else "GIORNATA MATCH"
-        self.draw_top_header("MVP ACCV", matchday_info)
+        secondary_title = f"MATCH vs {self.data.match_opponent.upper()}" if self.data.match_opponent else "PREMIO INDIVIDUALE"
+        self.draw_top_header("MVP ACCV", secondary_title)
 
         # 2. Main Title Banner ("MIGLIORE IN CAMPO")
         if self.aspect_ratio == AspectRatio.RATIO_9_16:

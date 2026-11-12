@@ -57,8 +57,8 @@ class BaseGraphicGenerator:
         """True for 16:9 or 4:3 landscape formats."""
         return self.width > self.height
 
-    def draw_top_header(self, tournament: str, matchday: str):
-        """Draw top tournament tag and matchday title."""
+    def draw_top_header(self, tournament: str, secondary_title: str):
+        """Draw a tournament tag and an optional secondary title."""
         if self.is_vertical:
             y_top = 80 if self.aspect_ratio == AspectRatio.RATIO_9_16 else 55
         elif self.is_wide_landscape:
@@ -77,36 +77,36 @@ class BaseGraphicGenerator:
             fill=Colors.ACCENT_CYAN
         )
         
-        # Matchday title below
-        font_size_md = 56 if self.is_vertical else 46
-        font_md = get_font("HEADER", font_size_md)
-        tw_md, th_md = get_text_dimensions(matchday.upper(), font_md)
-        self.draw.text(
-            ((self.width - tw_md) // 2, y_top + 32),
-            matchday.upper(),
-            font=font_md,
-            fill=Colors.TEXT_WHITE
-        )
+        if secondary_title:
+            font_size_secondary = 56 if self.is_vertical else 46
+            font_secondary = get_font("HEADER", font_size_secondary)
+            tw_secondary, _ = get_text_dimensions(secondary_title.upper(), font_secondary)
+            self.draw.text(
+                ((self.width - tw_secondary) // 2, y_top + 32),
+                secondary_title.upper(),
+                font=font_secondary,
+                fill=Colors.TEXT_WHITE
+            )
 
-    def draw_footer_brand(self, location_date_info: str = ""):
-        """Draw footer with team tagline and match location/date."""
+    def draw_footer_brand(self, detail_line: str = ""):
+        """Draw footer with an optional detail line and team branding."""
         if self.is_vertical:
             y_foot = self.height - (100 if self.aspect_ratio == AspectRatio.RATIO_9_16 else 75)
         else:
             y_foot = self.height - 60
         
-        if location_date_info:
+        if detail_line:
             font_loc = get_font("REGULAR", 22 if self.is_vertical else 19)
-            tw, th = get_text_dimensions(location_date_info, font_loc)
+            tw, th = get_text_dimensions(detail_line, font_loc)
             self.draw.text(
                 ((self.width - tw) // 2, y_foot - 32),
-                location_date_info,
+                detail_line,
                 font=font_loc,
                 fill=Colors.TEXT_MUTED
             )
             
         font_brand = get_font("BODY", 20 if self.is_vertical else 17)
-        brand_text = "A.C.C.V.  •  OFFICIAL MATCHDAY"
+        brand_text = "A.C.C.V.  •  OFFICIAL GRAPHICS"
         tw, th = get_text_dimensions(brand_text, font_brand)
         self.draw.text(
             ((self.width - tw) // 2, y_foot),

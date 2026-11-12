@@ -197,7 +197,7 @@ def build_match_result_from_payload(payload: Dict[str, Any]) -> tuple[MatchResul
         competition_description=competition_record.get("description", ""),
         season_description=season_record.get("description", ""),
         competition_logo_path=f"assets/logos/{competition_record['logo_filename']}" if competition_record.get("logo_filename") else None,
-        include_competition_info=bool(payload.get("include_competition_info", False)),
+        include_competition_info=bool(payload.get("include_competition_info", True)),
         mvp_name=payload.get("mvp_name") or None
     )
     
