@@ -104,5 +104,12 @@
     "role": "Centrocampista",
     "number": "10",
     "team": "A.C.C.V."
+  },
+  "bonaventura": {
+    "name": "Cristian Bonaventura",
+    "display_name": "",
+    "role": "Centrocampista",
+    "number": "27",
+    "team": "A.C.C.V."
   }
 }
