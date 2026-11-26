@@ -12,3 +12,21 @@ wheels/
 #output files
 output/
 
+# Java / Maven
+backend/target/
+
+# Eclipse / Spring Tools metadata (machine and workspace specific)
+backend/.settings/
+backend/.classpath
+backend/.factorypath
+backend/.project
+
+# Frontend Angular (build and local dependencies)
+node_modules/
+**/.angular/
+
+# Local environment variables (keep the template file shareable)
+.env
+.env.*
+!.env.example
+

@@ -12,9 +12,9 @@ from template_accv.config import FONTS, FONTS_DIR
 
 FONT_URLS = {
     "BebasNeue-Regular.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/BebasNeue-Regular.ttf",
-    "Montserrat-Bold.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/Montserrat-Bold.ttf",
-    "Montserrat-Regular.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/Montserrat-Regular.ttf",
-    "Montserrat-Light.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/Montserrat-Light.ttf",
+    "Montserrat-Bold.ttf": "https://raw.githubusercontent.com/JulietaUla/Montserrat/cc8daf2e7085006b9c112542fc82b58afc13521d/fonts/ttf/Montserrat-Bold.ttf",
+    "Montserrat-Regular.ttf": "https://raw.githubusercontent.com/JulietaUla/Montserrat/cc8daf2e7085006b9c112542fc82b58afc13521d/fonts/ttf/Montserrat-Regular.ttf",
+    "Montserrat-Light.ttf": "https://raw.githubusercontent.com/JulietaUla/Montserrat/cc8daf2e7085006b9c112542fc82b58afc13521d/fonts/ttf/Montserrat-Light.ttf",
 }
 
 _fonts_checked = False

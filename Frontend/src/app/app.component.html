@@ -1,0 +1,224 @@
+@if (loading) {
+  <main class="loading-screen">
+    <mat-spinner diameter="42"></mat-spinner>
+    <h1>ACCV Designer Lab</h1>
+    <p>Caricamento dello studio grafico…</p>
+  </main>
+} @else {
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="ACCV Designer Lab">
+        <span class="brand-mark"><mat-icon>sports_soccer</mat-icon></span>
+        <span class="brand-copy"><strong>Designer Lab</strong><small><b>ACCV</b> · Automazione grafiche & rose campionato</small></span>
+      </a>
+      <nav class="main-nav" aria-label="Sezioni dello studio">
+        @for (section of sections; track section.id) {
+          <button mat-button [class.active-nav]="active === section.id" (click)="setSection(section.id)">
+            <mat-icon>{{ section.icon }}</mat-icon><span>{{ section.title }}</span>
+          </button>
+        }
+      </nav>
+    </header>
+
+    @if (error) {
+      <div class="error-banner"><mat-icon>info</mat-icon><span>{{ error }}</span><button mat-button (click)="error = ''; schedulePreview()">Riprova</button></div>
+    }
+    @if (active === 'result' && warnings.length) {
+      <section class="warning-banner" aria-label="Avvisi sui dati della partita">
+        <mat-icon>warning_amber</mat-icon><div><strong>Controlla questi dati prima di scaricare</strong><ul>@for (warning of warnings; track warning) { <li>{{ warning }}</li> }</ul></div>
+      </section>
+    }
+
+    <main class="workspace" [class.management-workspace]="active === 'roster'">
+      <section class="editor-column">
+        <div class="section-heading surface">
+          <div class="heading-icon" [class.gold-icon]="active === 'mvp'"><mat-icon>{{ activeIcon }}</mat-icon></div>
+          <div><h1>{{ title }}</h1><p>{{ description }}</p></div>
+        </div>
+
+        @if (active === 'result') {
+          <mat-accordion multi>
+            <mat-expansion-panel expanded>
+              <mat-expansion-panel-header><mat-panel-title>Competizione e stagione</mat-panel-title><mat-panel-description>Informazioni della grafica</mat-panel-description></mat-expansion-panel-header>
+              <div class="form-grid">
+                <mat-form-field appearance="outline"><mat-label>Competizione</mat-label>
+                  <mat-select [(ngModel)]="result.competition_key" (ngModelChange)="schedulePreview()">
+                    @for (item of config.competitions || []; track item.key) { <mat-option [value]="item.key">{{ item.description }}</mat-option> }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Stagione</mat-label>
+                  <mat-select [(ngModel)]="result.season_key" (ngModelChange)="schedulePreview()">
+                    @for (item of competitionSeasons; track item.season_key) { <mat-option [value]="item.season_key">{{ item.description }}</mat-option> }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <p class="helper-text">La competizione e la stagione vengono caricate dal catalogo del backend.</p>
+              <mat-slide-toggle [(ngModel)]="result.include_competition_info" (change)="schedulePreview()">Aggiungi informazioni alla grafica</mat-slide-toggle>
+            </mat-expansion-panel>
+
+            <mat-expansion-panel expanded>
+              <mat-expansion-panel-header><mat-panel-title>Tabellone risultato</mat-panel-title><mat-panel-description>Squadre, punteggio e marcatori</mat-panel-description></mat-expansion-panel-header>
+              <div class="toolbar-row"><span class="eyebrow">Composizione grafica</span>
+                <mat-button-toggle-group [(ngModel)]="result.graphic_variant" (change)="schedulePreview()" aria-label="Composizione grafica">
+                  <mat-button-toggle value="balanced">Equilibrata</mat-button-toggle><mat-button-toggle value="score">Punteggio</mat-button-toggle><mat-button-toggle value="scorers">Marcatori</mat-button-toggle>
+                </mat-button-toggle-group>
+              </div>
+              <div class="form-grid score-grid">
+                <div class="team-score-card"><mat-form-field appearance="outline"><mat-label>Squadra casa</mat-label><mat-select [value]="result.home_team?.key" (selectionChange)="changeTeam('home', $event.value)">@for (team of teams; track team.key) { <mat-option [value]="team.key">{{ team.name }}</mat-option> }</mat-select></mat-form-field>
+                  <div class="score-control"><button mat-icon-button aria-label="Riduci punteggio casa" (click)="changeScore('home', -1)"><mat-icon>remove</mat-icon></button><strong>{{ result.home_score }}</strong><button mat-icon-button aria-label="Aumenta punteggio casa" (click)="changeScore('home', 1)"><mat-icon>add</mat-icon></button></div>
+                </div>
+                <button class="swap-button" mat-icon-button matTooltip="Inverti squadre" (click)="swapTeams()"><mat-icon>swap_horiz</mat-icon></button>
+                <div class="team-score-card"><mat-form-field appearance="outline"><mat-label>Squadra ospite</mat-label><mat-select [value]="result.away_team?.key" (selectionChange)="changeTeam('away', $event.value)">@for (team of teams; track team.key) { <mat-option [value]="team.key">{{ team.name }}</mat-option> }</mat-select></mat-form-field>
+                  <div class="score-control"><button mat-icon-button aria-label="Riduci punteggio ospite" (click)="changeScore('away', -1)"><mat-icon>remove</mat-icon></button><strong>{{ result.away_score }}</strong><button mat-icon-button aria-label="Aumenta punteggio ospite" (click)="changeScore('away', 1)"><mat-icon>add</mat-icon></button></div>
+                </div>
+              </div>
+              <div class="form-grid"><mat-form-field appearance="outline"><mat-label>Torneo / competizione</mat-label><input matInput [(ngModel)]="result.tournament" (ngModelChange)="schedulePreview()"></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Impianto / campo</mat-label><input matInput [(ngModel)]="result.location" (ngModelChange)="schedulePreview()"></mat-form-field></div>
+              <div class="scorers-grid">
+                @for (side of teamSides; track side) {
+                  <div class="scorer-box"><span class="eyebrow">Marcatori · {{ result[side + '_team']?.name }}</span>
+                    <div class="scorer-add"><mat-form-field appearance="outline"><mat-label>Calciatore</mat-label><mat-select #playerSelect><mat-option value="">Seleziona rosa</mat-option>@for (player of players; track player.key) { @if (!player.team || player.team === result[side + '_team']?.key) { <mat-option [value]="player.display_name || player.name">{{ player.display_name || player.name }}</mat-option> } }</mat-select></mat-form-field>
+                      <button mat-flat-button color="primary" (click)="addScorer(side, playerSelect.value)"><mat-icon>add</mat-icon>Aggiungi</button></div>
+                    @for (scorer of result[side + '_scorers']; track $index; let i = $index) { <div class="scorer-row"><span>{{ scorer.name }} <b>×{{ scorer.goals }}</b></span><button mat-icon-button (click)="removeScorer(side, i)" aria-label="Rimuovi gol"><mat-icon>remove_circle_outline</mat-icon></button></div> }
+                  </div>
+                }
+              </div>
+            </mat-expansion-panel>
+
+            <mat-expansion-panel>
+              <mat-expansion-panel-header><mat-panel-title>Cartellini</mat-panel-title><mat-panel-description>Ammonizioni ed espulsioni</mat-panel-description></mat-expansion-panel-header>
+              <div class="card-lists">@for (side of teamSides; track side) {
+                <div class="scorer-box"><span class="eyebrow">{{ result[side + '_team']?.name }}</span>
+                  @for (card of cardTypes; track card.id) {
+                    <div class="card-row"><span class="card-label"><i [class.yellow-card]="card.id === 'yellow'" [class.red-card]="card.id === 'red'"></i>{{ card.label }}</span>
+                      <mat-form-field appearance="outline"><mat-label>Calciatore</mat-label><mat-select #cardPlayer>@for (player of players; track player.key) { @if (!player.team || player.team === result[side + '_team']?.key) { <mat-option [value]="player.display_name || player.name">{{ player.display_name || player.name }}</mat-option> } }</mat-select></mat-form-field>
+                      <button mat-icon-button aria-label="Aggiungi cartellino" (click)="addCard(side, card.id, cardPlayer.value)"><mat-icon>add_circle</mat-icon></button>
+                    </div>
+                    <div class="card-chips">@for (name of result[side + '_' + card.id + '_cards']; track $index; let i = $index) { <span class="card-chip"><i [class.yellow-card]="card.id === 'yellow'" [class.red-card]="card.id === 'red'"></i>{{ name }}<button (click)="removeCard(side, card.id, i)" aria-label="Rimuovi cartellino">×</button></span> }</div>
+                  }
+                </div>
+              }</div>
+            </mat-expansion-panel>
+
+            <mat-expansion-panel expanded>
+              <mat-expansion-panel-header><mat-panel-title>Sfondo e filtri</mat-panel-title><mat-panel-description>Atmosfera, immagine e contrasto</mat-panel-description></mat-expansion-panel-header>
+              <div class="form-grid"><mat-form-field appearance="outline"><mat-label>Atmosfera</mat-label><mat-select [value]="result.emotion" (selectionChange)="chooseEmotion($event.value)">@for (emotion of emotions; track emotion) { <mat-option [value]="emotion">{{ emotion | titlecase }}</mat-option> }</mat-select></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Sfondo dal catalogo</mat-label><mat-select [value]="result.bg_path || ''" (selectionChange)="chooseBackground($event.value)"><mat-option value="">Casuale dalla categoria</mat-option>@for (bg of backgrounds; track bg.relative_path) { @if (bg.category.toLowerCase() === result.emotion.toLowerCase() || bg.category.toLowerCase().includes('predefinito')) { <mat-option [value]="bg.full_path">{{ bg.filename }}</mat-option> } }</mat-select></mat-form-field></div>
+              <div class="upload-row"><label class="eyebrow" for="background-upload">Carica uno sfondo</label><input id="background-upload" type="file" accept="image/png,image/jpeg,image/webp" (change)="uploadBackground($event)"></div>
+              <div class="switch-list"><mat-slide-toggle [(ngModel)]="result.remove_contrast" (change)="schedulePreview()">Effetto flat: riduci il contrasto</mat-slide-toggle><mat-slide-toggle [(ngModel)]="result.mix_team_colors" (change)="schedulePreview()">Mix dei colori squadra</mat-slide-toggle></div>
+              <div class="crop-controls"><label>Zoom sfondo <b>{{ result.bg_zoom | number:'1.1-1' }}×</b><input type="range" min="0.8" max="2.2" step="0.05" [(ngModel)]="result.bg_zoom" (input)="schedulePreview()"></label><label>Posizione orizzontale<input type="range" min="0" max="1" step="0.01" [(ngModel)]="result.bg_x" (input)="schedulePreview()"></label><label>Posizione verticale<input type="range" min="0" max="1" step="0.01" [(ngModel)]="result.bg_y" (input)="schedulePreview()"></label></div>
+            </mat-expansion-panel>
+          </mat-accordion>
+        }
+
+        @if (active === 'next') {
+          <mat-card class="form-card"><mat-card-content class="form-stack">
+            <mat-form-field appearance="outline"><mat-label>Competizione</mat-label><mat-select [(ngModel)]="next.tournament" (ngModelChange)="schedulePreview()">@for (item of config.competitions || []; track item.key) { <mat-option [value]="item.description">{{ item.description }}</mat-option> }</mat-select></mat-form-field>
+            <div class="form-grid"><mat-form-field appearance="outline"><mat-label>Squadra casa</mat-label><mat-select [value]="next.home_team?.key" (selectionChange)="changeTeam('home', $event.value)">@for (team of teams; track team.key) { <mat-option [value]="team.key">{{ team.name }}</mat-option> }</mat-select></mat-form-field><mat-form-field appearance="outline"><mat-label>Squadra ospite</mat-label><mat-select [value]="next.away_team?.key" (selectionChange)="changeTeam('away', $event.value)">@for (team of teams; track team.key) { <mat-option [value]="team.key">{{ team.name }}</mat-option> }</mat-select></mat-form-field></div>
+            <button mat-stroked-button (click)="swapTeams()"><mat-icon>swap_horiz</mat-icon> Inverti squadre</button>
+            <mat-form-field appearance="outline"><mat-label>Impianto / campo sportivo</mat-label><input matInput [(ngModel)]="next.location" (ngModelChange)="schedulePreview()"></mat-form-field>
+            <ng-container *ngTemplateOutlet="backgroundControls"></ng-container>
+          </mat-card-content></mat-card>
+        }
+
+        @if (active === 'mvp') {
+          <mat-card class="form-card"><mat-card-content class="form-stack">
+            <div class="form-grid"><mat-form-field appearance="outline"><mat-label>Nome calciatore</mat-label><input matInput [(ngModel)]="mvp.player_name" (ngModelChange)="schedulePreview()"></mat-form-field><mat-form-field appearance="outline"><mat-label>Numero maglia</mat-label><input matInput type="number" [(ngModel)]="mvp.jersey_number" (ngModelChange)="schedulePreview()"></mat-form-field></div>
+            <div class="form-grid"><mat-form-field appearance="outline"><mat-label>Ruolo</mat-label><input matInput [(ngModel)]="mvp.position" (ngModelChange)="schedulePreview()"></mat-form-field><mat-form-field appearance="outline"><mat-label>Avversario</mat-label><input matInput [(ngModel)]="mvp.match_opponent" (ngModelChange)="schedulePreview()"></mat-form-field></div>
+            <div class="form-grid three-fields"><mat-form-field appearance="outline"><mat-label>Gol</mat-label><input matInput type="number" [(ngModel)]="mvp.goals" (ngModelChange)="schedulePreview()"></mat-form-field><mat-form-field appearance="outline"><mat-label>Assist</mat-label><input matInput type="number" [(ngModel)]="mvp.assists" (ngModelChange)="schedulePreview()"></mat-form-field><mat-form-field appearance="outline"><mat-label>Voto</mat-label><input matInput [(ngModel)]="mvp.rating" (ngModelChange)="schedulePreview()"></mat-form-field></div>
+            <ng-container *ngTemplateOutlet="backgroundControls"></ng-container>
+          </mat-card-content></mat-card>
+        }
+
+        @if (active === 'figurina') {
+          <mat-card class="form-card"><mat-card-content class="form-stack">
+            <mat-form-field appearance="outline"><mat-label>Calciatore</mat-label><mat-select [value]="figurina.player_key" (selectionChange)="chooseFigurinaPlayer($event.value)">@for (player of players; track player.key) { <mat-option [value]="player.key">{{ player.name }}</mat-option> }</mat-select></mat-form-field>
+            <div class="form-grid"><mat-form-field appearance="outline"><mat-label>Nome in grafica</mat-label><input matInput [(ngModel)]="figurina.player_name" (ngModelChange)="schedulePreview()"></mat-form-field><mat-form-field appearance="outline"><mat-label>Ruolo</mat-label><input matInput [(ngModel)]="figurina.role" (ngModelChange)="schedulePreview()"></mat-form-field></div>
+            <div class="form-grid"><mat-form-field appearance="outline"><mat-label>Numero maglia</mat-label><input matInput [(ngModel)]="figurina.jersey_number" (ngModelChange)="schedulePreview()"></mat-form-field><mat-form-field appearance="outline"><mat-label>Formato</mat-label><mat-select [value]="figurina.format" (selectionChange)="setFigurinaFormat($event.value)"><mat-option value="story">Story</mat-option><mat-option value="card">Card</mat-option><mat-option value="post">Post 4:5</mat-option></mat-select></mat-form-field></div>
+            <mat-slide-toggle [(ngModel)]="figurina.with_banner" (change)="schedulePreview()">Mostra fascia grafica</mat-slide-toggle>
+          </mat-card-content></mat-card>
+        }
+
+        @if (active === 'roster') {
+          <mat-card class="form-card"><mat-card-content>
+            <div class="manager-heading"><div class="management-tabs"><button mat-button [class.selected]="managementTab === 'players'" (click)="setManagementTab('players')">Rosa</button><button mat-button [class.selected]="managementTab === 'teams'" (click)="setManagementTab('teams')">Squadre</button><button mat-button [class.selected]="managementTab === 'seasons'" (click)="setManagementTab('seasons')">Stagioni</button><button mat-button [class.selected]="managementTab === 'competitions'" (click)="setManagementTab('competitions')">Competizioni</button></div><button mat-flat-button color="primary" (click)="newRecord()"><mat-icon>add</mat-icon>Nuovo</button></div>
+            @if (editingRecord) {
+              <section class="record-editor">
+                <div class="record-editor-head"><strong>{{ editingRecord.id ? 'Modifica elemento' : 'Nuovo elemento' }}</strong><button mat-icon-button aria-label="Chiudi editor" (click)="cancelEdit()"><mat-icon>close</mat-icon></button></div>
+                <div class="form-grid">
+                  @if (managementTab === 'players') {
+                    <mat-form-field appearance="outline"><mat-label>Codice</mat-label><input matInput [(ngModel)]="editingRecord.key" [disabled]="!!editingRecord.id"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Nome completo</mat-label><input matInput [(ngModel)]="editingRecord.name"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Nome in grafica</mat-label><input matInput [(ngModel)]="editingRecord.display_name"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Ruolo</mat-label><input matInput [(ngModel)]="editingRecord.role"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Numero maglia</mat-label><input matInput type="number" min="1" max="99" [(ngModel)]="editingRecord.number"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Squadra</mat-label><mat-select [(ngModel)]="editingRecord.team_id">@for (team of teams; track team.id) { <mat-option [value]="team.id">{{ team.name }}</mat-option> }</mat-select></mat-form-field>
+                    <label class="upload-editor-field"><span>Foto giocatore (PNG/JPG/WebP)</span><input type="file" accept="image/png,image/jpeg,image/webp" (change)="uploadManagementAsset($event, 'player')"></label>
+                  }
+                  @if (managementTab === 'teams') {
+                    <mat-form-field appearance="outline"><mat-label>Codice</mat-label><input matInput [(ngModel)]="editingRecord.key" [disabled]="!!editingRecord.id"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Nome squadra</mat-label><input matInput [(ngModel)]="editingRecord.name"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Nome esteso</mat-label><input matInput [(ngModel)]="editingRecord.extended_name"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Sigla</mat-label><input matInput [(ngModel)]="editingRecord.short_name"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Rivalità (1–5)</mat-label><input matInput type="number" min="1" max="5" [(ngModel)]="editingRecord.rivalry"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Note</mat-label><input matInput [(ngModel)]="editingRecord.notes"></mat-form-field>
+                    <label class="color-field"><span>Colore principale</span><input type="color" [(ngModel)]="editingRecord.primaryColorHex"></label><label class="color-field"><span>Colore secondario</span><input type="color" [(ngModel)]="editingRecord.secondaryColorHex"></label><label class="color-field"><span>Colore terziario</span><input type="color" [(ngModel)]="editingRecord.tertiaryColorHex"></label>
+                    <label class="upload-editor-field"><span>Logo squadra</span><input type="file" accept="image/png,image/jpeg,image/webp" (change)="uploadManagementAsset($event, 'logo')"></label>
+                  }
+                  @if (managementTab === 'seasons' || managementTab === 'competitions') {
+                    <mat-form-field appearance="outline"><mat-label>Codice</mat-label><input matInput [(ngModel)]="editingRecord.key" [disabled]="!!editingRecord.id"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>{{ managementTab === 'seasons' ? 'Descrizione stagione' : 'Nome competizione' }}</mat-label><input matInput [(ngModel)]="editingRecord.description"></mat-form-field>
+                    <mat-form-field appearance="outline"><mat-label>Note</mat-label><input matInput [(ngModel)]="editingRecord.notes"></mat-form-field>
+                    @if (managementTab === 'competitions') { <label class="upload-editor-field"><span>Logo competizione</span><input type="file" accept="image/png,image/jpeg,image/webp" (change)="uploadManagementAsset($event, 'logo')"></label> }
+                    @if (managementTab === 'competitions') { <mat-form-field appearance="outline"><mat-label>Stagioni collegate</mat-label><mat-select multiple [value]="competitionSeasonKeys" (selectionChange)="updateCompetitionSeasons($event.value)">@for (season of config.seasons || []; track season.key) { <mat-option [value]="season.key">{{ season.description }}</mat-option> }</mat-select></mat-form-field> }
+                  }
+                </div>
+                @if (managementTab === 'competitions' && editingRecord.seasons?.length) {
+                  <div class="association-editor"><span class="eyebrow">SQUADRE PER STAGIONE</span>@for (association of editingRecord.seasons; track association.season_key) {
+                    <div class="association-row"><strong>{{ seasonDescription(association.season_key) }}</strong><mat-form-field appearance="outline"><mat-label>Squadre partecipanti</mat-label><mat-select multiple [(ngModel)]="association.team_keys">@for (team of teams; track team.key) { <mat-option [value]="team.key">{{ team.name }}</mat-option> }</mat-select></mat-form-field></div>
+                  }</div>
+                }
+                <div class="record-editor-actions"><button mat-button (click)="cancelEdit()">Annulla</button><button mat-flat-button color="primary" [disabled]="savingRecord" (click)="saveRecord()"><mat-icon>save</mat-icon>{{ savingRecord ? 'Salvataggio…' : 'Salva' }}</button></div>
+              </section>
+            }
+            <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Dettaglio</th><th>Codice</th><th></th></tr></thead><tbody>
+              @for (item of managementRecords; track item.key) {
+                <tr><td>{{ item.name || item.description }}</td><td>{{ managementTab === 'players' ? item.role + ' · #' + item.number : managementTab === 'teams' ? (item.short_name || '—') : (item.notes || '—') }}</td><td>{{ item.key }}</td><td class="row-actions"><button mat-icon-button (click)="editRecord(item)" aria-label="Modifica"><mat-icon>edit</mat-icon></button>@if (managementTab !== 'teams' || item.key !== 'accv') { <button mat-icon-button (click)="deleteRecord(item)" aria-label="Elimina"><mat-icon>delete_outline</mat-icon></button> }</td></tr>
+              } @empty { <tr><td colspan="4" class="empty-row">Nessun elemento nel catalogo.</td></tr> }
+            </tbody></table></div><p class="helper-text">Le modifiche sono salvate tramite le API Spring Boot. Le associazioni tra competizioni, stagioni e squadre restano gestite dai dati già presenti.</p>
+          </mat-card-content></mat-card>
+        }
+      </section>
+
+      @if (active !== 'roster') {
+        <aside class="preview-column">
+          <mat-card class="preview-card">
+            <div class="preview-card-head"><div><span class="eyebrow">ANTEPRIMA LIVE</span><h2>La tua grafica</h2></div><span class="render-status" [class.is-rendering]="rendering"><i></i>{{ rendering ? 'Aggiornamento' : 'Aggiornata' }}</span></div>
+            <div class="preview-stage">
+              <div class="preview-image-wrap" [class.is-portrait]="selectedFormat === '9:16' || selectedFormat === '4:5'">
+                @if (preview) { <img [src]="preview" alt="Anteprima della grafica generata"> }
+                @else { <div class="preview-empty"><mat-icon>image</mat-icon><span>La grafica apparirà qui</span></div> }
+                @if (showSafeZone && selectedFormat === '9:16') { <div class="safe-zone"><span>AREA NON SICURA</span><span>AREA NON SICURA</span></div> }
+                @if (rendering) { <div class="render-scrim"><mat-spinner diameter="36"></mat-spinner></div> }
+              </div>
+            </div>
+            <div class="preview-meta"><strong>{{ previewSize || selectedFormatSize }}</strong><span>PNG ad alta risoluzione</span></div>
+            <div class="format-picker"><span class="eyebrow">FORMATO DI ESPORTAZIONE</span><div class="format-grid">
+              @for (format of formats; track format.id) { <button [class.chosen-format]="selectedFormat === format.id" (click)="chooseFormat(format.id)"><strong>{{ format.id }}</strong><span>{{ format.label }}</span></button> }
+            </div></div>
+            <div class="preview-actions"><button mat-flat-button color="primary" class="download-button" [disabled]="!preview || rendering" (click)="download()"><mat-icon>download</mat-icon>Scarica PNG</button>
+              <button mat-stroked-button (click)="downloadAll()"><mat-icon>folder_zip</mat-icon>Tutti i formati</button></div>
+            <div class="secondary-actions"><button mat-button [disabled]="!preview" (click)="copyPreview()"><mat-icon>content_copy</mat-icon>Copia</button><button mat-button [disabled]="!preview" (click)="sharePreview()"><mat-icon>ios_share</mat-icon>Condividi</button><button mat-button (click)="showSafeZone = !showSafeZone"><mat-icon>{{ showSafeZone ? 'visibility_off' : 'visibility' }}</mat-icon>Area sicura</button></div>
+          </mat-card>
+          <div class="preview-tip"><mat-icon>lightbulb</mat-icon><span>Le modifiche vengono aggiornate automaticamente. Il pacchetto include tutti i formati disponibili.</span></div>
+        </aside>
+      }
+    </main>
+    <div class="toast" [class.toast-visible]="!!toast"><mat-icon>check_circle</mat-icon>{{ toast }}</div>
+    <ng-template #backgroundControls>
+      <div class="subsection-title">Sfondo e filtri</div><div class="form-grid"><mat-form-field appearance="outline"><mat-label>Atmosfera</mat-label><mat-select [value]="current.emotion" (selectionChange)="chooseEmotion($event.value)">@for (emotion of emotions; track emotion) { <mat-option [value]="emotion">{{ emotion | titlecase }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Sfondo</mat-label><mat-select [value]="current.bg_path || ''" (selectionChange)="chooseBackground($event.value)"><mat-option value="">Casuale</mat-option>@for (bg of backgrounds; track bg.relative_path) { <mat-option [value]="bg.full_path">{{ bg.category }} · {{ bg.filename }}</mat-option> }</mat-select></mat-form-field></div>
+      <div class="upload-row"><label class="eyebrow" for="shared-background-upload">Carica uno sfondo</label><input id="shared-background-upload" type="file" accept="image/png,image/jpeg,image/webp" (change)="uploadBackground($event)"></div><mat-slide-toggle [(ngModel)]="current.remove_contrast" (change)="schedulePreview()">Riduci contrasto dello sfondo</mat-slide-toggle>
+    </ng-template>
+  </div>
+}

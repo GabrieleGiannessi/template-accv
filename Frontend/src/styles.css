@@ -1,0 +1,86 @@
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+
+:root {
+  color-scheme: light;
+  /* Neutral, low-saturation palette aligned with the existing workspace. */
+  --app-primary: #3b6154;
+  --app-primary-hover: #2f5146;
+  --app-primary-soft: #e9f0ec;
+  --app-secondary: #82745d;
+  --app-border: #dfe6e1;
+  --mat-sys-primary: var(--app-primary);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #dce9e2;
+  --mat-sys-on-primary-container: #172f25;
+  --mat-sys-primary-fixed: #dce9e2;
+  --mat-sys-primary-fixed-dim: #bfd3c8;
+  --mat-sys-on-primary-fixed: #172f25;
+  --mat-sys-on-primary-fixed-variant: #3b6154;
+  --mat-sys-inverse-primary: #b4d0c4;
+  --mat-sys-surface-tint: var(--app-primary);
+  --mat-sys-secondary: var(--app-secondary);
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: #eee9df;
+  --mat-sys-on-secondary-container: #302a20;
+  --mat-sys-secondary-fixed: #eee9df;
+  --mat-sys-secondary-fixed-dim: #d8d0c1;
+  --mat-sys-on-secondary-fixed: #302a20;
+  --mat-sys-on-secondary-fixed-variant: #625947;
+  --mat-sys-tertiary: #687c83;
+  --mat-sys-on-tertiary: #ffffff;
+  --mat-sys-tertiary-container: #e4ecee;
+  --mat-sys-on-tertiary-container: #233439;
+  --mat-sys-tertiary-fixed: #e4ecee;
+  --mat-sys-tertiary-fixed-dim: #c8d7db;
+  --mat-sys-on-tertiary-fixed: #233439;
+  --mat-sys-on-tertiary-fixed-variant: #4d6269;
+  --mat-sys-background: #f6f8f7;
+  --mat-sys-on-background: #26332c;
+  --mat-sys-surface: #ffffff;
+  --mat-sys-on-surface: #26332c;
+  --mat-sys-surface-variant: #e9eeeb;
+  --mat-sys-on-surface-variant: #59665f;
+  --mat-sys-surface-container-lowest: #ffffff;
+  --mat-sys-surface-container-low: #f7f9f7;
+  --mat-sys-surface-container: #f0f4f1;
+  --mat-sys-surface-container-high: #e9efeb;
+  --mat-sys-surface-container-highest: #e2e9e4;
+  --mat-sys-surface-bright: #ffffff;
+  --mat-sys-surface-dim: #d9dfdb;
+  --mat-sys-inverse-surface: #303732;
+  --mat-sys-inverse-on-surface: #edf1ee;
+  --mat-sys-error: #a34f4a;
+  --mat-sys-on-error: #ffffff;
+  --mat-sys-error-container: #f6e2df;
+  --mat-sys-on-error-container: #48201d;
+  --mat-sys-outline: #77837b;
+  --mat-sys-outline-variant: var(--app-border);
+}
+* { box-sizing: border-box; }
+html, body { min-width: 320px; min-height: 100%; margin: 0; background: #f6f8f7; }
+body { color: #23332a; font-family: 'Roboto', sans-serif; -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; }
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-container-shape: 12px;
+  --mdc-outlined-text-field-outline-color: #cbd7d0;
+  --mdc-outlined-text-field-hover-outline-color: #80988a;
+  --mdc-outlined-text-field-focus-outline-color: var(--app-primary);
+}
+.mat-mdc-form-field .mdc-text-field--outlined { background: linear-gradient(180deg, #fff 0%, #f8fbf9 100%); box-shadow: 0 2px 6px #20392c0a; transition: background-color .16s ease, box-shadow .16s ease; }
+.mat-mdc-form-field:hover .mdc-text-field--outlined { box-shadow: 0 3px 9px #20392c12; }
+.mat-mdc-form-field .mdc-floating-label, .mat-mdc-form-field input, .mat-mdc-select-value { font-size: 13px !important; }
+.mat-mdc-select-trigger { min-height: 24px; }
+.mat-mdc-select-arrow { color: #53675b; }
+.mat-mdc-form-field.mat-focused .mdc-text-field--outlined { background: #fbfdfc; box-shadow: 0 0 0 3px #3b615417, 0 3px 9px #20392c12; }
+.mat-mdc-form-field-subscript-wrapper { display: none; }
+.mdc-switch { --mdc-switch-selected-track-color: var(--app-primary); --mdc-switch-selected-handle-color: var(--app-primary); }
+.mat-mdc-slide-toggle .mdc-label { color: #59675f; font-size: 11px; }
+.mdc-button { letter-spacing: 0 !important; }
+.mat-mdc-button, .mat-mdc-outlined-button, .mat-mdc-unelevated-button { border-radius: 9px !important; font-weight: 600; transition: background-color .16s ease, color .16s ease, box-shadow .16s ease; }
+.mat-mdc-button:not(:disabled):not(.active-nav):not(.selected):not(.download-button):hover { background: var(--app-primary-soft); color: var(--app-primary-hover); }
+.mat-mdc-outlined-button { border-color: var(--app-border) !important; }
+.mat-mdc-outlined-button:not(:disabled):hover { background: #f2f6f3; }
+.mat-mdc-unelevated-button, .mat-mdc-flat-button { box-shadow: 0 2px 5px #263b3014; }
+.mat-mdc-unelevated-button:not(:disabled):hover, .mat-mdc-flat-button:not(:disabled):hover { box-shadow: 0 3px 8px #263b3020; }
+.mat-mdc-button:focus-visible, .mat-mdc-outlined-button:focus-visible, .mat-mdc-unelevated-button:focus-visible { outline: 2px solid #829d90; outline-offset: 2px; }
+.mat-mdc-progress-spinner { --mdc-circular-progress-active-indicator-color: var(--app-primary); }
